@@ -1,0 +1,23 @@
+tests/test_v0b_fake_protocol.py
+  s_c9cd3c530a4290::t_5a72405faa958d 1-42
+src/manxiang/runtime.py
+  s_c9cd3c530a4290::t_bb7de5d1d6baaa 1-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "81801a4f3d62667649dcefc98472c1d2fbd9b133",
+  "prompts": {},
+  "sessions": {
+    "s_c9cd3c530a4290": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd1dd-3fa6-7ef0-a923-5e343131abd4",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 463,
+      "accepted_lines": 463
+    }
+  }
+}
