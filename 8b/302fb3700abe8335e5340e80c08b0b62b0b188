@@ -1,0 +1,35 @@
+piagent/tools.ts
+  s_c9cd3c530a4290::t_203c21b4dd3370 1-285
+piagent/prompts.ts
+  s_c9cd3c530a4290::t_db3b22cfb0159a 1-36
+piagent/types.ts
+  s_c9cd3c530a4290::t_db3b22cfb0159a 1-23
+tsconfig.json
+  s_c9cd3c530a4290::t_db3b22cfb0159a 1-11
+piagent/llm.ts
+  s_c9cd3c530a4290::t_db3b22cfb0159a 1-15
+.gitignore
+  s_c9cd3c530a4290::t_486c7656313983 6-7
+piagent/manxiang-agent.ts
+  s_c9cd3c530a4290::t_203c21b4dd3370 1-40
+package.json
+  s_c9cd3c530a4290::t_db3b22cfb0159a 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "8b302fb3700abe8335e5340e80c08b0b62b0b188",
+  "prompts": {},
+  "sessions": {
+    "s_c9cd3c530a4290": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd1dd-3fa6-7ef0-a923-5e343131abd4",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 806,
+      "accepted_lines": 806
+    }
+  }
+}
