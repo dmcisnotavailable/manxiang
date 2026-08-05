@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>慢想工作台</title>
+  <style>
+    :root {
+      --ink: #111;
+      --muted: #666;
+      --light: #999;
+      --line: #d9d9d9;
+      --bg: #fff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      letter-spacing: 0;
+    }
+
+    button, textarea {
+      font: inherit;
+    }
+
+    button {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    button:hover {
+      text-decoration: underline;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      padding: 18px 28px 14px;
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: baseline;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      font-size: 18px;
+      font-weight: 650;
+    }
+
+    .actions {
+      display: flex;
+      gap: 18px;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      color: var(--muted);
+    }
+
+    nav {
+      display: flex;
+      gap: 22px;
+      overflow-x: auto;
+      white-space: nowrap;
+      color: var(--muted);
+    }
+
+    .step {
+      padding-bottom: 7px;
+      border-bottom: 1px solid transparent;
+      color: var(--muted);
+    }
+
+    .step.active {
+      color: var(--ink);
+      border-bottom-color: var(--ink);
+    }
+
+    .step.done::after {
+      content: " ✓";
+      color: var(--muted);
+    }
+
+    main {
+      width: min(880px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 42px 0 120px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 30px;
+      line-height: 1.2;
+      font-weight: 650;
+    }
+
+    h2 {
+      margin: 34px 0 10px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 650;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 15px;
+      font-weight: 650;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .line {
+      border-top: 1px solid var(--line);
+      margin: 24px 0;
+    }
+
+    .list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .item {
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .item:last-child {
+      border-bottom: 0;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: baseline;
+    }
+
+    .row strong {
+      font-weight: 650;
+    }
+
+    .meta {
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    .plain-list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    .plain-list li {
+      margin: 4px 0;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 1fr);
+      gap: 8px 14px;
+      margin: 14px 0;
+    }
+
+    .key {
+      color: var(--muted);
+    }
+
+    .tree, .draft {
+      margin: 12px 0 0;
+      padding: 0;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .draft {
+      font-family: inherit;
+    }
+
+    .command-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-top: 22px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .command-row button {
+      font-weight: 500;
+    }
+
+    .composer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.96);
+      border-top: 1px solid var(--line);
+      padding: 14px 28px 18px;
+    }
+
+    .composer-inner {
+      width: min(880px, calc(100vw - 40px));
+      margin: 0 auto;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 58px;
+      resize: vertical;
+      border: 0;
+      border-bottom: 1px solid var(--ink);
+      outline: none;
+      padding: 8px 0;
+      color: var(--ink);
+      background: transparent;
+    }
+
+    .composer-tools {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      margin-top: 10px;
+      color: var(--muted);
+    }
+
+    .types {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .types button {
+      color: var(--muted);
+    }
+
+    .types button.active {
+      color: var(--ink);
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    .send {
+      color: var(--ink);
+      font-weight: 650;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 104px;
+      transform: translateX(-50%);
+      padding: 6px 0;
+      color: var(--ink);
+      background: var(--bg);
+      border-bottom: 1px solid var(--ink);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 140ms ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    @media (max-width: 720px) {
+      header {
+        padding: 16px 18px 12px;
+      }
+
+      .topline {
+        display: grid;
+        gap: 10px;
+      }
+
+      main {
+        width: calc(100vw - 32px);
+        padding-top: 30px;
+      }
+
+      h1 {
+        font-size: 25px;
+      }
+
+      .kv {
+        grid-template-columns: 1fr;
+        gap: 2px;
+      }
+
+      .composer {
+        padding: 12px 16px 16px;
+      }
+
+      .composer-inner {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="topline">
+        <div>
+          <div class="brand">慢想</div>
+          <div class="small" id="subtitle">从收藏到草稿的一条线</div>
+        </div>
+        <div class="actions">
+          <button id="seedDemo" type="button">载入示例</button>
+          <button id="resetState" type="button">重置</button>
+        </div>
+      </div>
+      <nav id="steps" aria-label="五步流程"></nav>
+    </header>
+
+    <main id="main"></main>
+
+    <section class="composer" aria-label="输入材料">
+      <div class="composer-inner">
+        <textarea id="composerText">为什么 AI 陪伴让人觉得真实和被理解？</textarea>
+        <div class="composer-tools">
+          <div class="types" id="types"></div>
+          <button class="send" id="sendCapture" type="button">收进来</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const steps = [
+      { id: "capture", title: "1 收集箱" },
+      { id: "topics", title: "2 主题雷达" },
+      { id: "scope", title: "3 开题研究" },
+      { id: "map", title: "4 知识地图" },
+      { id: "draft", title: "5 输出草稿" },
+    ];
+
+    const captureTypes = [
+      { id: "text", label: "文本" },
+      { id: "url", label: "链接" },
+      { id: "screenshot_note", label: "截图说明" },
+      { id: "video_note", label: "视频笔记" },
+    ];
+
+    const apiBase = location.protocol === "file:" ? "http://127.0.0.1:8765" : "";
+
+    const state = {
+      step: "capture",
+      captureType: "text",
+      captures: [],
+      topics: [],
+      selectedTopicId: "",
+      task: null,
+      linePlan: null,
+      map: null,
+      draftType: "outline",
+      draft: "",
+      parking: ["底层模型架构", "语音克隆技术史"],
+      notice: "",
+      apiOnline: true,
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      }[char]));
+    }
+
+    async function api(path, payload) {
+      const options = payload === undefined
+        ? {}
+        : {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          };
+      const response = await fetch(apiBase + path, options);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "请求失败");
+      applyServerState(data);
+      return data;
+    }
+
+    function applyServerState(data) {
+      state.captures = data.captures || [];
+      state.topics = data.topics || [];
+      state.selectedTopicId = data.selectedTopicId || "";
+      state.task = data.task || null;
+      state.linePlan = data.linePlan || null;
+      state.map = data.map || null;
+      state.draftType = data.draftType || "outline";
+      state.draft = data.draft || "";
+      state.parking = data.parking || [];
+      state.notice = data.notice || "";
+      state.apiOnline = true;
+    }
+
+    function selectedTopic() {
+      return state.topics.find((topic) => topic.id === state.selectedTopicId) || state.topics[0] || null;
+    }
+
+    async function loadState() {
+      try {
+        await api("/api/state");
+      } catch (error) {
+        state.apiOnline = false;
+        toast("请先运行：PYTHONPATH=src uv run python -m manxiang.web");
+      }
+      render();
+    }
+
+    function isDone(id) {
+      if (id === "capture") return state.captures.length > 0;
+      if (id === "topics") return state.topics.length > 0;
+      if (id === "scope") return Boolean(state.task);
+      if (id === "map") return Boolean(state.map);
+      if (id === "draft") return Boolean(state.draft);
+      return false;
+    }
+
+    function go(step) {
+      state.step = step;
+      render();
+    }
+
+    function toast(text) {
+      const node = $("#toast");
+      node.textContent = text;
+      node.classList.add("show");
+      setTimeout(() => node.classList.remove("show"), 1500);
+    }
+
+    async function seedDemo() {
+      await api("/api/seed", {});
+      state.step = "capture";
+      render();
+      toast("已载入示例");
+    }
+
+    async function resetState() {
+      await api("/api/reset", {});
+      state.step = "capture";
+      state.captureType = "text";
+      $("#composerText").value = "为什么 AI 陪伴让人觉得真实和被理解？";
+      render();
+      toast("已重置");
+    }
+
+    function renderSteps() {
+      $("#steps").innerHTML = steps.map((step) => {
+        const active = state.step === step.id ? " active" : "";
+        const done = isDone(step.id) ? " done" : "";
+        return '<button class="step' + active + done + '" data-step="' + step.id + '" type="button">' + step.title + '</button>';
+      }).join("");
+      document.querySelectorAll("[data-step]").forEach((button) => {
+        button.addEventListener("click", () => go(button.dataset.step));
+      });
+    }
+
+    function renderTypes() {
+      $("#types").innerHTML = captureTypes.map((type) => {
+        const active = state.captureType === type.id ? " active" : "";
+        return '<button class="' + active + '" data-type="' + type.id + '" type="button">' + type.label + '</button>';
+      }).join("");
+      document.querySelectorAll("[data-type]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.captureType = button.dataset.type;
+          renderTypes();
+        });
+      });
+    }
+
+    function renderCapture() {
+      const items = state.captures.length ? state.captures.map((capture) => `
+        <div class="item">
+          <div class="row">
+            <strong>${esc(capture.user_note)}</strong>
+            <span class="small">${esc(capture.status)}</span>
+          </div>
+          <div class="meta">${esc(capture.summary)}</div>
+          <div class="small">标签：${capture.tags.map(esc).join(" / ")}</div>
+          <div class="small">候选主题：${esc((capture.candidate_topics || [])[0] || "未命名兴趣")}</div>
+        </div>
+      `).join("") : '<p class="muted">还没有材料。在底部输入一条链接、摘录或感想，然后点“收进来”。</p>';
+
+      return `
+        <h1>先收进来，不急着研究</h1>
+        <p class="muted">慢想先保存原始感想、轻量摘要、标签和候选主题。按钮动作已接到本地 ManxiangPipeline。</p>
+        ${state.apiOnline ? "" : '<p class="muted">未连接本地服务。请在项目目录运行：PYTHONPATH=src uv run python -m manxiang.web</p>'}
+        <h2>已收材料</h2>
+        <div class="list">${items}</div>
+        <div class="command-row">
+          <button id="goTopics" type="button">生成主题雷达</button>
+          <button id="loadFive" type="button">载入 5 条示例</button>
+        </div>
+      `;
+    }
+
+    function renderTopics() {
+      const items = state.topics.length ? state.topics.map((topic) => `
+        <div class="item">
+          <div class="row">
+            <strong>${esc(topic.name)}</strong>
+            <span class="small">${topic.status} / ${Math.round((topic.maturity_score || 0) * 100)}%</span>
+          </div>
+          <div class="meta">收藏 ${topic.capture_ids.length} 条。${esc(topic.suggested_action)}。</div>
+          <div class="small">反复问题：${esc(topic.repeated_questions[0] || "还没有稳定问题")}</div>
+          <div class="command-row">
+            <button data-start-topic="${esc(topic.id)}" type="button">开始研究</button>
+          </div>
+        </div>
+      `).join("") : '<p class="muted">还没有主题。先收进 3-5 条材料。</p>';
+
+      return `
+        <h1>这些材料正在聚成什么主题？</h1>
+        <p class="muted">主题雷达只回答一件事：你最近反复被什么问题吸引。</p>
+        <h2>主题</h2>
+        <div class="list">${items}</div>
+      `;
+    }
+
+    function renderScope() {
+      if (!state.task) return '<h1>先选择一个主题</h1><p class="muted">主题雷达里还没有可开题的主题。</p>';
+
+      return `
+        <h1>我建议这样开题</h1>
+        <p class="muted">${esc(state.linePlan.reason)}</p>
+        <h2>研究契约</h2>
+        <div class="kv">
+          <div class="key">主题</div><div>${esc(selectedTopic().name)}</div>
+          <div class="key">默认产出</div><div>${esc(state.task.output)}</div>
+          <div class="key">核心问题</div><div>${esc(state.task.coreQuestion)}</div>
+          <div class="key">Agent 模式</div><div>${esc(state.task.mode)}</div>
+        </div>
+        <h2>范围</h2>
+        <div class="kv">
+          <div class="key">允许深入</div><div>${state.task.allowed.map(esc).join(" / ")}</div>
+          <div class="key">暂不展开</div><div>${state.task.blocked.map(esc).join(" / ")}</div>
+        </div>
+        <h2>推荐主线</h2>
+        <p>${esc(state.linePlan.recommendedLine)}：${state.linePlan.nodes.map(esc).join(" → ")}</p>
+        <div class="command-row">
+          <button id="makeMap" type="button">生成知识地图</button>
+        </div>
+      `;
+    }
+
+    function renderMap() {
+      if (!state.map) return '<h1>先完成开题</h1><p class="muted">确定主线后才能生成地图。</p>';
+
+      const tree = state.task.title + `
+├─ 核心问题
+├─ 推荐主线
+│  ${state.map.mainline.map((item, index) => (index === state.map.mainline.length - 1 ? "└" : "├") + "─ " + item).join("\n│  ")}
+├─ 关键概念
+│  ${state.map.concepts.map((item, index) => (index === state.map.concepts.length - 1 ? "└" : "├") + "─ " + item).join("\n│  ")}
+├─ 证据材料
+├─ 证据缺口
+│  ${state.map.gaps.map((item, index) => (index === state.map.gaps.length - 1 ? "└" : "├") + "─ " + item).join("\n│  ")}
+└─ 分支停车场`;
+
+      return `
+        <h1>这是当前知识地图</h1>
+        <p class="muted">这一步先看结构和证据缺口，不急着写成长文。</p>
+        <h2>文本视图</h2>
+        <div class="kv">
+          <div class="key">核心问题</div><div>${esc(state.map.coreQuestion)}</div>
+          <div class="key">推荐主线</div><div>${state.map.mainline.map(esc).join(" → ")}</div>
+          <div class="key">证据缺口</div><div>${state.map.gaps.map(esc).join(" / ")}</div>
+          <div class="key">下一步</div><div>${esc(state.map.nextAction)}</div>
+        </div>
+        <h2>树状图视图</h2>
+        <pre class="tree">${esc(tree)}</pre>
+        <div class="command-row">
+          <button id="patchEvidence" type="button">补证据</button>
+          <button id="parkBranch" type="button">放入停车场</button>
+          <button id="confirmMap" type="button">确认地图并生成草稿</button>
+        </div>
+      `;
+    }
+
+    function renderDraft() {
+      if (!state.draft) return '<h1>先确认知识地图</h1><p class="muted">确认地图后，后端会基于 ManxiangPipeline 结果生成草稿。</p>';
+      return `
+        <h1>先给你一个可改的草稿</h1>
+        <p class="muted">第一版只做报告骨架或短札记，不冒充完整研究报告。</p>
+        <div class="command-row">
+          <button id="outlineDraft" type="button">报告骨架</button>
+          <button id="noteDraft" type="button">短札记草稿</button>
+          <button id="copyDraft" type="button">复制草稿</button>
+        </div>
+        <h2>${state.draftType === "note" ? "短札记草稿" : "报告骨架"}</h2>
+        <div class="draft">${esc(state.draft)}</div>
+      `;
+    }
+
+    function bindEvents() {
+      $("#goTopics")?.addEventListener("click", async () => {
+        await api("/api/topics", {});
+        go("topics");
+      });
+      $("#loadFive")?.addEventListener("click", seedDemo);
+      document.querySelectorAll("[data-start-topic]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          await api("/api/knowledge-map", { topic_id: button.dataset.startTopic, mode: "gentle_editor" });
+          go("scope");
+        });
+      });
+      $("#makeMap")?.addEventListener("click", () => {
+        go("map");
+      });
+      $("#patchEvidence")?.addEventListener("click", async () => {
+        const data = await api("/api/evidence-hint", {});
+        toast(data.notice || "已标出证据缺口");
+      });
+      $("#parkBranch")?.addEventListener("click", async () => {
+        await api("/api/parking", { title: "新出现的偏题分支" });
+        render();
+        toast("已放入停车场");
+      });
+      $("#confirmMap")?.addEventListener("click", async () => {
+        await api("/api/draft", { type: "outline" });
+        go("draft");
+      });
+      $("#outlineDraft")?.addEventListener("click", async () => {
+        await api("/api/draft", { type: "outline" });
+        render();
+      });
+      $("#noteDraft")?.addEventListener("click", async () => {
+        await api("/api/draft", { type: "note" });
+        render();
+      });
+      $("#copyDraft")?.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(state.draft);
+          toast("草稿已复制");
+        } catch {
+          toast("浏览器未允许复制");
+        }
+      });
+    }
+
+    function render() {
+      renderSteps();
+      renderTypes();
+      const topic = selectedTopic();
+      $("#subtitle").textContent = topic ? topic.name : "从收藏到草稿的一条线";
+      if (state.step === "capture") $("#main").innerHTML = renderCapture();
+      if (state.step === "topics") $("#main").innerHTML = renderTopics();
+      if (state.step === "scope") $("#main").innerHTML = renderScope();
+      if (state.step === "map") $("#main").innerHTML = renderMap();
+      if (state.step === "draft") $("#main").innerHTML = renderDraft();
+      bindEvents();
+    }
+
+    $("#sendCapture").addEventListener("click", async () => {
+      const text = $("#composerText").value.trim();
+      if (!text) return toast("先输入一点材料");
+      await api("/api/captures", {
+        type: state.captureType,
+        source: "工作台输入",
+        user_note: text,
+        raw_text: "",
+      });
+      state.step = "capture";
+      $("#composerText").value = "";
+      render();
+      toast("已轻量归档");
+    });
+
+    $("#seedDemo").addEventListener("click", seedDemo);
+    $("#resetState").addEventListener("click", resetState);
+    loadState();
+  </script>
+</body>
+</html>

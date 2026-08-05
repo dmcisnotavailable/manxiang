@@ -1,0 +1,262 @@
+from __future__ import annotations
+
+import shutil
+from dataclasses import asdict, is_dataclass
+from pathlib import Path
+from typing import Any
+
+from manxiang.pipeline import ManxiangPipeline
+from manxiang.schema import AgentMode, CaptureType, KnowledgeMap, LinePlan, ResearchTask
+
+
+DEMO_NOTES = [
+    "为什么 AI 陪伴让人觉得真实和被理解？",
+    "明知道是 AI，为什么还是有人会依赖？",
+    "AI 陪伴的即时回应是不是降低了表达压力？",
+    "AI 陪伴的长期记忆会不会增强被理解的感觉？",
+    "AI 陪伴这类产品为什么能让人产生亲密感？",
+]
+
+
+class WorkbenchService:
+    """Small stateful bridge between the prototype UI and ManxiangPipeline."""
+
+    def __init__(self, storage_root: str | Path, clock=lambda: "2026-08-02T20:00:00+08:00"):
+        self.storage_root = Path(storage_root)
+        self.clock = clock
+        self._reset_runtime()
+
+    def reset(self) -> dict[str, Any]:
+        if self.storage_root.exists():
+            shutil.rmtree(self.storage_root)
+        self._reset_runtime()
+        return self.state()
+
+    def capture(
+        self,
+        type: CaptureType = "text",
+        source: str = "工作台输入",
+        user_note: str = "",
+        raw_text: str = "",
+    ) -> dict[str, Any]:
+        if not user_note.strip():
+            raise ValueError("user_note is required")
+        self.pipeline.capture(type=type, source=source or "工作台输入", user_note=user_note, raw_text=raw_text)
+        self._clear_downstream()
+        return self.state()
+
+    def seed_demo(self) -> dict[str, Any]:
+        self.reset()
+        for index, note in enumerate(DEMO_NOTES):
+            self.pipeline.capture(type="text", source=f"demo note {index + 1}", user_note=note)
+        self.discover_topics()
+        topic_id = self.selected_topic_id or self.topics[0]["id"]
+        self.create_knowledge_map(topic_id=topic_id, mode="gentle_editor")
+        self.create_draft("outline")
+        return self.state()
+
+    def discover_topics(self) -> dict[str, Any]:
+        topics = self.pipeline.discover_topics()
+        self.topics = [_to_jsonable(topic) for topic in topics]
+        if self.topics and not self.selected_topic_id:
+            self.selected_topic_id = self.topics[0]["id"]
+        self._clear_task_outputs()
+        return self.state()
+
+    def select_topic(self, topic_id: str) -> dict[str, Any]:
+        if not topic_id:
+            raise ValueError("topic_id is required")
+        self.selected_topic_id = topic_id
+        self._clear_task_outputs()
+        return self.state()
+
+    def create_knowledge_map(self, topic_id: str | None = None, mode: AgentMode = "gentle_editor") -> dict[str, Any]:
+        if not self.topics:
+            self.discover_topics()
+        selected = topic_id or self.selected_topic_id
+        if not selected:
+            raise ValueError("topic_id is required")
+        self.selected_topic_id = selected
+        task, line_plan, knowledge_map = self.pipeline.create_knowledge_map(selected, mode=mode)
+        self.task = _task_view(task)
+        self.line_plan = _line_plan_view(line_plan)
+        self.knowledge_map = _map_view(knowledge_map)
+        self.draft = ""
+        self.draft_type = "outline"
+        return self.state()
+
+    def create_draft(self, draft_type: str = "outline") -> dict[str, Any]:
+        if not self.knowledge_map or not self.task:
+            raise ValueError("knowledge_map is required before drafting")
+        self.draft_type = "note" if draft_type == "note" else "outline"
+        self.draft = _draft_for(self.draft_type, self.task, self.knowledge_map)
+        return self.state()
+
+    def park_branch(self, title: str = "新出现的偏题分支") -> dict[str, Any]:
+        if title not in self.parking:
+            self.parking.append(title)
+        return self.state()
+
+    def patch_evidence_hint(self) -> dict[str, Any]:
+        gaps = self.knowledge_map.get("gaps", []) if self.knowledge_map else []
+        self.notice = f"补证据入口：{gaps[0]}" if gaps else "当前还没有明确证据缺口"
+        return self.state()
+
+    def state(self) -> dict[str, Any]:
+        return {
+            "captures": [_to_jsonable(capture) for capture in self.pipeline.store.list_captures()],
+            "topics": self.topics,
+            "selectedTopicId": self.selected_topic_id,
+            "task": self.task,
+            "linePlan": self.line_plan,
+            "map": self.knowledge_map,
+            "draftType": self.draft_type,
+            "draft": self.draft,
+            "parking": self.parking,
+            "notice": self.notice,
+        }
+
+    def _reset_runtime(self) -> None:
+        self.pipeline = ManxiangPipeline(storage_root=self.storage_root, clock=self.clock)
+        self.topics: list[dict[str, Any]] = []
+        self.selected_topic_id = ""
+        self.task: dict[str, Any] | None = None
+        self.line_plan: dict[str, Any] | None = None
+        self.knowledge_map: dict[str, Any] | None = None
+        self.draft_type = "outline"
+        self.draft = ""
+        self.parking = ["底层模型架构", "语音克隆技术史"]
+        self.notice = ""
+
+    def _clear_downstream(self) -> None:
+        self.topics = []
+        self.selected_topic_id = ""
+        self._clear_task_outputs()
+
+    def _clear_task_outputs(self) -> None:
+        self.task = None
+        self.line_plan = None
+        self.knowledge_map = None
+        self.draft = ""
+        self.draft_type = "outline"
+
+
+def _to_jsonable(value: Any) -> Any:
+    if is_dataclass(value):
+        return _to_jsonable(asdict(value))
+    if isinstance(value, list):
+        return [_to_jsonable(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _to_jsonable(item) for key, item in value.items()}
+    return value
+
+
+def _task_view(task: ResearchTask) -> dict[str, Any]:
+    return {
+        "id": task.id,
+        "title": task.title,
+        "topicId": task.topic_id,
+        "mode": _mode_label(task.mode),
+        "output": "知识地图",
+        "coreQuestion": task.core_question,
+        "allowed": task.allowed_scope,
+        "blocked": task.blocked_scope,
+        "goal": task.goal,
+        "stage": task.stage,
+    }
+
+
+def _line_plan_view(line_plan: LinePlan) -> dict[str, Any]:
+    return {
+        "recommendedLine": _line_label(line_plan.selected_line),
+        "auxiliary": [_line_label(line) for line in line_plan.auxiliary_lines],
+        "reason": line_plan.recommendation_reason,
+        "nodes": [node.title for node in line_plan.line_nodes],
+        "riskNotes": line_plan.risk_notes,
+    }
+
+
+def _map_view(knowledge_map: KnowledgeMap) -> dict[str, Any]:
+    root = knowledge_map.tree
+    mainline = _child_labels(root, "mainline")
+    concepts = _child_labels(root, "concept")
+    evidence = _child_labels(root, "evidence")
+    gaps = _child_labels(root, "evidence_gap")
+    return {
+        "taskId": knowledge_map.task_id,
+        "version": knowledge_map.version,
+        "title": root.label,
+        "coreQuestion": knowledge_map.text_view.core_question,
+        "mainline": mainline,
+        "concepts": concepts,
+        "evidence": evidence,
+        "gaps": gaps,
+        "nextAction": knowledge_map.text_view.next_action,
+        "recommendationReason": knowledge_map.text_view.recommendation_reason,
+        "tree": _tree_view(root),
+    }
+
+
+def _tree_view(node) -> dict[str, Any]:
+    return {
+        "id": node.id,
+        "label": node.label,
+        "kind": node.kind,
+        "children": [_tree_view(child) for child in node.children],
+    }
+
+
+def _child_labels(root, kind: str) -> list[str]:
+    for child in root.children:
+        if child.kind == kind:
+            return [grandchild.label for grandchild in child.children]
+    return []
+
+
+def _draft_for(draft_type: str, task: dict[str, Any], knowledge_map: dict[str, Any]) -> str:
+    if draft_type == "note":
+        return (
+            "我真正想弄清楚的是：\n"
+            f"{knowledge_map['coreQuestion']}\n\n"
+            "目前看，关键不只是模型多聪明，而是它提供了一种低风险表达空间："
+            "不用担心被评价，也能立刻得到回应。\n\n"
+            "但这里还有两个证据缺口："
+            f"{'、'.join(knowledge_map['gaps'])}。"
+        )
+    gaps = "\n".join(f"- {gap}" for gap in knowledge_map["gaps"])
+    return (
+        f"标题：\n{task['title']}\n\n"
+        "一、问题从哪里来\n"
+        "- 需求背景\n"
+        "- 用户为什么会产生陪伴需求\n\n"
+        "二、为什么 AI 陪伴降低表达压力\n"
+        "- 低风险表达\n"
+        "- 即时回应\n\n"
+        "三、陪伴感如何形成\n"
+        "- 记忆与人格化\n"
+        "- 持续互动\n\n"
+        "四、目前证据不足的地方\n"
+        f"{gaps}\n\n"
+        "五、下一步要补什么\n"
+        "- 找 2-3 条用户研究或产品案例"
+    )
+
+
+def _line_label(line: str) -> str:
+    labels = {
+        "causal": "因果线",
+        "timeline": "时间线",
+        "question": "问题线",
+        "stakeholder": "人物/利益线",
+        "emotion": "情绪/个人触动线",
+    }
+    return labels.get(line, line)
+
+
+def _mode_label(mode: str) -> str:
+    labels = {
+        "strict_mentor": "严格导师型",
+        "gentle_editor": "温和编辑型",
+        "research_buddy": "研究搭子型",
+    }
+    return labels.get(mode, mode)

@@ -1,0 +1,145 @@
+flowchart LR
+  %% 慢想专用技术架构图：源码可编辑版
+
+  subgraph USER["用户与入口"]
+    U["用户输入<br/>链接 / 文本 / 截图说明 / 视频笔记 / 实时感想"]
+    DEMO["manxiang/examples/07_manxiang_mvp.py<br/>当前 CLI demo 入口"]
+    FUTURE_UI["未来产品入口<br/>Browser Extension / App / API"]
+  end
+
+  subgraph PIPE["编排层"]
+    MP["ManxiangPipeline<br/>MVP 工作流门面"]
+  end
+
+  subgraph REPO["知识库适配层（长期方向）"]
+    SREPO["SourceRepository<br/>来源元数据 / 抽取片段 / 引用锚点"]
+    KREPO["KnowledgeRepository<br/>主题 / 任务 / 地图 / 证据 / 草稿"]
+    EREPO["EventRepository<br/>事件日志 / diff / checkpoint / replay"]
+  end
+
+  subgraph DOMAIN["领域 Agent 角色 / 策略模块"]
+    CAP["CaptureProcessor<br/>轻量收藏处理器<br/>只归档、打标签、不展开研究"]
+    TOPIC["TopicDiscoverer<br/>主题发现器<br/>按候选主题聚类并计算成熟度"]
+    NAV["TaskNavigator<br/>任务导航器<br/>研究契约、主线推荐、越界风险提示"]
+    MAP["KnowledgeMapBuilder<br/>知识地图生成器<br/>文本视图 + 只读树状图"]
+    INT["InterventionPolicy<br/>干预策略<br/>提醒 / 限制 / 拒绝 / 停车场"]
+    EVI["EvidencePatcher<br/>证据补丁器<br/>只在 evidence_patching 阶段搜索"]
+  end
+
+  subgraph MODEL["领域模型 manxiang/src/manxiang/schema.py"]
+    SCHEMA["dataclasses + Literal 状态机<br/>CaptureItem / TopicCluster / ResearchTask<br/>LinePlan / KnowledgeMap / EvidenceGap<br/>EvidenceItem / ParkingLotItem / InterventionDecision"]
+  end
+
+  subgraph STORE["当前 MVP 本地存储适配器 manxiang/src/manxiang/storage.py"]
+    JS["JsonStore<br/>本地 JSON MVP 存储<br/>未来替换为 Repository 实现"]
+    CJSON["captures.json"]
+    TJSON["topics.json"]
+    TASKJSON["tasks.json"]
+    MJSON["maps.json"]
+    EVJSON["evidence.json"]
+    PJSON["parking.json"]
+  end
+
+  subgraph KB["未来可接入的长期知识库"]
+    LOCALKB["本地知识库<br/>文件目录 / SQLite / 向量索引"]
+    CLOUDKB["云端知识库<br/>数据库 / 对象存储 / 向量检索"]
+    THIRD["第三方知识库<br/>Notion / Obsidian / Logseq / 私有 API"]
+  end
+
+  subgraph EXT["外部能力边界"]
+    SP["SearchProvider Protocol"]
+    FAKE["FakeSearchProvider<br/>测试与本地 demo"]
+    WEB["未来真实联网搜索<br/>只服务明确证据缺口"]
+    LLM["未来 LLM / Agent SDK<br/>摘要、聚类、写作升级、风格学习"]
+  end
+
+  subgraph OUTPUT["默认产出"]
+    TOPICS["主题清单<br/>fragment / gathering / ready"]
+    CONTRACT["研究任务契约<br/>目标 / 核心问题 / 范围 / 模式"]
+    LINE["主线方案<br/>causal / timeline / question / stakeholder / emotion"]
+    KM["知识地图<br/>文本视图 + 树状图 + 证据缺口 + 停车场"]
+    PATCH["证据补丁<br/>来源绑定到主线节点"]
+  end
+
+  U --> DEMO
+  U -.-> FUTURE_UI
+  DEMO --> MP
+  FUTURE_UI -.-> MP
+
+  MP -.长期依赖接口.-> SREPO
+  MP -.长期依赖接口.-> KREPO
+  MP -.长期依赖接口.-> EREPO
+
+  SREPO -.当前实现.-> JS
+  KREPO -.当前实现.-> JS
+  EREPO -.未来实现.-> JS
+  SREPO -.可替换.-> LOCALKB
+  KREPO -.可替换.-> LOCALKB
+  EREPO -.可替换.-> LOCALKB
+  SREPO -.可替换.-> CLOUDKB
+  KREPO -.可替换.-> CLOUDKB
+  EREPO -.可替换.-> CLOUDKB
+  SREPO -.可适配.-> THIRD
+  KREPO -.可适配.-> THIRD
+
+  MP --> CAP
+  CAP --> JS
+  JS --> CJSON
+  MP --> TOPIC
+  TOPIC --> JS
+  JS --> TJSON
+  TOPIC --> TOPICS
+
+  MP --> NAV
+  NAV --> CONTRACT
+  NAV --> LINE
+  NAV --> JS
+  JS --> TASKJSON
+
+  MP --> MAP
+  MAP --> KM
+  MAP --> JS
+  JS --> MJSON
+
+  INT -.被导航器或产品层调用.-> NAV
+  INT --> PJSON
+
+  EVI --> SP
+  SP --> FAKE
+  SP -.未来替换.-> WEB
+  EVI --> PATCH
+  EVI --> JS
+  JS --> EVJSON
+
+  CAP --> SCHEMA
+  TOPIC --> SCHEMA
+  NAV --> SCHEMA
+  MAP --> SCHEMA
+  INT --> SCHEMA
+  EVI --> SCHEMA
+  JS --> SCHEMA
+
+  LLM -.未来增强.-> CAP
+  LLM -.未来增强.-> TOPIC
+  LLM -.未来增强.-> MAP
+  LLM -.未来写作升级.-> KM
+
+  classDef entry fill:#F7F5EF,stroke:#B9A46A,color:#1F2933;
+  classDef pipe fill:#E9F2FF,stroke:#5B8CC0,color:#1F2933;
+  classDef repo fill:#FFFFFF,stroke:#111111,color:#1F2933;
+  classDef domain fill:#FFF0E7,stroke:#D98D5F,color:#1F2933;
+  classDef model fill:#EAF7EF,stroke:#78B58B,color:#1F2933;
+  classDef store fill:#F1EEF8,stroke:#9A83C4,color:#1F2933;
+  classDef kb fill:#F7F7F7,stroke:#777777,color:#1F2933;
+  classDef ext fill:#EEF6F8,stroke:#5FA4B8,color:#1F2933;
+  classDef out fill:#F8F8F1,stroke:#A8AA67,color:#1F2933;
+
+  class U,DEMO,FUTURE_UI entry;
+  class MP pipe;
+  class SREPO,KREPO,EREPO repo;
+  class CAP,TOPIC,NAV,MAP,INT,EVI domain;
+  class SCHEMA model;
+  class JS,CJSON,TJSON,TASKJSON,MJSON,EVJSON,PJSON store;
+  class LOCALKB,CLOUDKB,THIRD kb;
+  class SP,FAKE,WEB,LLM ext;
+  class TOPICS,CONTRACT,LINE,KM,PATCH out;
