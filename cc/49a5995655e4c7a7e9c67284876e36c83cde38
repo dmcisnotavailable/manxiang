@@ -1,0 +1,25 @@
+tests/test_v0b_fixtures.py
+  s_c9cd3c530a4290::t_2eafa492ac6dca 1-44
+src/manxiang/schema.py
+  s_c9cd3c530a4290::t_84df85c7453832 7-11,33-41,55-127
+src/manxiang/fixtures.py
+  s_c9cd3c530a4290::t_ae9f65ea5aa9a0 1-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "cc49a5995655e4c7a7e9c67284876e36c83cde38",
+  "prompts": {},
+  "sessions": {
+    "s_c9cd3c530a4290": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd1dd-3fa6-7ef0-a923-5e343131abd4",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 147,
+      "accepted_lines": 147
+    }
+  }
+}
