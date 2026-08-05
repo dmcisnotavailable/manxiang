@@ -1,0 +1,32 @@
+examples/07_manxiang_mvp.py
+  s_c9cd3c530a4290::t_87bceb50a5525b 13,15,19,25-33,36-37,39-40,43-54
+docs/manxiang-architecture.mmd
+  s_c9cd3c530a4290::t_e78fd948d29cd0 145
+  s_c9cd3c530a4290::t_85eadf43dc9c18 33-34,41-42,55,77,115-116,126-128
+prototype/workbench.html
+  s_c9cd3c530a4290::t_07fca3c923edac 346,357,489
+  s_c9cd3c530a4290::t_a813b11548e3a4 482
+src/manxiang/capture.py
+  s_c9cd3c530a4290::t_3f50bb649bc3e2 4,79,83-87
+  s_c9cd3c530a4290::t_7d4a9f3854541f 27,74-75
+README.md
+  s_c9cd3c530a4290::t_5b8dc287291e95 5,17,46-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "bfa90f3ff81392112d190c3402c9cb616cf9a479",
+  "prompts": {},
+  "sessions": {
+    "s_c9cd3c530a4290": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd1dd-3fa6-7ef0-a923-5e343131abd4",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 14,
+      "accepted_lines": 14
+    }
+  }
+}
