@@ -343,7 +343,7 @@
           <div class="small" id="subtitle">从收藏到草稿的一条线</div>
         </div>
         <div class="actions">
-          <button id="seedDemo" type="button">载入示例</button>
+          <button id="seedDemo" type="button">加载王室真实测试用例</button>
           <button id="resetState" type="button">重置</button>
         </div>
       </div>
@@ -354,7 +354,7 @@
 
     <section class="composer" aria-label="输入材料">
       <div class="composer-inner">
-        <textarea id="composerText">为什么 AI 陪伴让人觉得真实和被理解？</textarea>
+        <textarea id="composerText">伊莎贝拉女王和哥伦布相关，感觉能串起来了</textarea>
         <div class="composer-tools">
           <div class="types" id="types"></div>
           <button class="send" id="sendCapture" type="button">收进来</button>
@@ -479,14 +479,14 @@
       await api("/api/seed", {});
       state.step = "capture";
       render();
-      toast("已载入示例");
+      toast("已加载王室真实测试用例");
     }
 
     async function resetState() {
       await api("/api/reset", {});
       state.step = "capture";
       state.captureType = "text";
-      $("#composerText").value = "为什么 AI 陪伴让人觉得真实和被理解？";
+      $("#composerText").value = "伊莎贝拉女王和哥伦布相关，感觉能串起来了";
       render();
       toast("已重置");
     }

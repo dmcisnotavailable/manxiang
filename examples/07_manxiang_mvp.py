@@ -10,37 +10,48 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from manxiang.fixtures import v0b_capture_fixtures
 from manxiang.pipeline import ManxiangPipeline
+from manxiang.runs import create_run
 
 
 def now() -> str:
-    return "2026-08-02T20:00:00+08:00"
+    return "2026-08-05T20:00:00+08:00"
 
 
 def main() -> None:
     with TemporaryDirectory(prefix="manxiang-demo-") as tmpdir:
         pipeline = ManxiangPipeline(storage_root=Path(tmpdir), clock=now)
-        notes = [
-            "为什么 AI 陪伴让人觉得真实和被理解？",
-            "明知道是 AI，为什么还是有人会依赖？",
-            "AI 陪伴的即时回应是不是降低了表达压力？",
-            "AI 陪伴的长期记忆会不会增强被理解的感觉？",
-            "AI 陪伴这类产品为什么能让人产生亲密感？",
-        ]
-        for index, note in enumerate(notes):
-            pipeline.capture(type="text", source=f"demo note {index + 1}", user_note=note)
+        captures = []
+        for fixture in v0b_capture_fixtures():
+            capture = pipeline.capture(
+                type=_capture_type_for(fixture),
+                source=fixture.get("source_uri", "manual"),
+                user_note=fixture.get("user_note", ""),
+                raw_text=fixture.get("original_text", ""),
+            )
+            captures.append(capture)
 
         topics = pipeline.discover_topics()
-        task, line_plan, knowledge_map = pipeline.create_knowledge_map(topics[0].id, mode="gentle_editor")
+        run = create_run(pipeline.store, [capture.id for capture in captures], clock=now)
+        events = pipeline.store.replay_events(run.id)
 
+        print("=== V0b Captures ===")
+        print(json.dumps([asdict(capture) for capture in captures], ensure_ascii=False, indent=2))
         print("=== Topics ===")
         print(json.dumps([asdict(topic) for topic in topics], ensure_ascii=False, indent=2))
-        print("\n=== Task ===")
-        print(json.dumps(asdict(task), ensure_ascii=False, indent=2))
-        print("\n=== Line Plan ===")
-        print(json.dumps(asdict(line_plan), ensure_ascii=False, indent=2))
-        print("\n=== Knowledge Map ===")
-        print(json.dumps(asdict(knowledge_map), ensure_ascii=False, indent=2))
+        print("\n=== Surprise Run ===")
+        print(json.dumps(asdict(run), ensure_ascii=False, indent=2))
+        print("\n=== Event Replay ===")
+        print(json.dumps([asdict(event) for event in events], ensure_ascii=False, indent=2))
+
+
+def _capture_type_for(fixture: dict[str, str]) -> str:
+    if fixture["source_type"] == "url":
+        return "url"
+    if fixture["source_type"] == "mixed":
+        return "screenshot_note"
+    return "text"
 
 
 if __name__ == "__main__":

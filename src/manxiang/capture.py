@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from hashlib import sha1
 from pathlib import Path
+import re
 
 from manxiang.schema import CaptureItem, CaptureType, SourceType
 from manxiang.source_adapters import ParsedSource, infer_v0b_topics, parse_url_light
@@ -23,7 +24,7 @@ class CaptureProcessor:
         original_text = raw_text or (source if source_type == "text" else "")
         parsed = self._parse_source(source_type=source_type, source=source, user_note=user_note)
         all_text = " ".join([source, user_note, raw_text, parsed.ai_summary_draft])
-        tags = self._infer_tags(all_text)
+        tags = self._infer_tags(" ".join([source, user_note, raw_text]))
         emotion_keywords = self._infer_emotions(user_note)
         candidate_topics = self._infer_topics(tags, user_note, all_text, parsed.candidate_topics)
         summary = self._summarize(type, tags)
@@ -70,12 +71,19 @@ class CaptureProcessor:
             ("哥伦布", "大航海"),
             ("费利佩", "译名"),
             ("菲利普", "译名"),
+            ("spanish", "欧洲王室"),
+            ("royal", "欧洲王室"),
         ]
         tags: list[str] = []
         for keyword, tag in rules:
-            if keyword.lower() in text.lower() and tag not in tags:
+            if self._contains_keyword(text, keyword) and tag not in tags:
                 tags.append(tag)
         return tags or ["未分类"]
+
+    def _contains_keyword(self, text: str, keyword: str) -> bool:
+        if keyword == "AI":
+            return re.search(r"(?<![a-zA-Z])ai(?![a-zA-Z])", text, flags=re.IGNORECASE) is not None
+        return keyword.lower() in text.lower()
 
     def _infer_emotions(self, user_note: str) -> list[str]:
         emotions: list[str] = []
