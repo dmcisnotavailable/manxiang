@@ -5,6 +5,7 @@ from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any
 
+from manxiang.events import StateEvent, make_event_id
 from manxiang.schema import (
     CaptureItem,
     EvidenceItem,
@@ -66,6 +67,38 @@ class JsonStore:
     def list_parking_items(self) -> list[ParkingLotItem]:
         return [ParkingLotItem(**row) for row in self._read_many("parking.json")]
 
+    def append_event(self, run_id: str, event_type: str, payload: dict) -> StateEvent:
+        seq = self._next_event_seq()
+        event = StateEvent(
+            id=make_event_id(run_id, seq, event_type),
+            seq=seq,
+            run_id=run_id,
+            type=event_type,
+            payload=payload,
+            created_at=self._event_time(),
+        )
+        with self._path("events.jsonl").open("a", encoding="utf-8") as file:
+            file.write(json.dumps(self._to_jsonable(event), ensure_ascii=False) + "\n")
+        self._append_checkpoint(run_id=run_id, seq=seq, pointer="events.jsonl")
+        return event
+
+    def replay_events(self, run_id: str, after_seq: int = 0) -> list[StateEvent]:
+        path = self._path("events.jsonl")
+        if not path.exists():
+            return []
+
+        events: list[StateEvent] = []
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            if row["run_id"] == run_id and row["seq"] > after_seq:
+                events.append(StateEvent(**row))
+        return sorted(events, key=lambda event: event.seq)
+
+    def list_checkpoints(self, run_id: str) -> list[dict]:
+        return [row for row in self._read_many("checkpoints.json") if row["run_id"] == run_id]
+
     def _path(self, filename: str) -> Path:
         return self.root / filename
 
@@ -88,6 +121,31 @@ class JsonStore:
         kept = [row for row in rows if row.get(key_field) != item_id]
         kept.append(payload)
         self._write_many(filename, kept)
+
+    def _next_event_seq(self) -> int:
+        path = self._path("event_seq.json")
+        if not path.exists():
+            path.write_text(json.dumps({"seq": 0}), encoding="utf-8")
+        row = json.loads(path.read_text(encoding="utf-8"))
+        row["seq"] += 1
+        path.write_text(json.dumps(row), encoding="utf-8")
+        return int(row["seq"])
+
+    def _append_checkpoint(self, run_id: str, seq: int, pointer: str) -> None:
+        rows = self._read_many("checkpoints.json")
+        rows.append(
+            {
+                "checkpoint_id": f"ckpt_{run_id}_{seq}",
+                "run_id": run_id,
+                "seq": seq,
+                "pointer": pointer,
+                "created_at": self._event_time(),
+            }
+        )
+        self._write_many("checkpoints.json", rows)
+
+    def _event_time(self) -> str:
+        return "2026-08-05T20:00:00+08:00"
 
     def _to_jsonable(self, value: Any) -> Any:
         if is_dataclass(value):
