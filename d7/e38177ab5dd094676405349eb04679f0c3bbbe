@@ -1,0 +1,21 @@
+.gitignore
+  s_895475f9b57c8b::t_9570da0bc41b17 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "d7e38177ab5dd094676405349eb04679f0c3bbbe",
+  "prompts": {},
+  "sessions": {
+    "s_895475f9b57c8b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd178-2734-7911-ab4e-fbe5f1a79206",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 1,
+      "accepted_lines": 1
+    }
+  }
+}
