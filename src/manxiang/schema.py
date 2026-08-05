@@ -4,6 +4,11 @@ from typing import Literal
 
 CaptureType = Literal["url", "text", "screenshot_note", "video_note"]
 CaptureStatus = Literal["new", "captured", "light_tagged", "clustered", "used_in_task", "parked", "archived"]
+SourceType = Literal["text", "image", "url", "mixed"]
+SummaryStatus = Literal["summary_pending", "summary_confirmed", "summary_rejected"]
+ParseStatus = Literal["not_parsed", "metadata_parsed", "parse_failed"]
+RunStatus = Literal["queued", "exploring", "waiting_user", "completed", "failed", "aborted"]
+AutonomyLevel = Literal["inbox_only", "source_parse_allowed", "web_search_allowed"]
 TopicStatus = Literal["fragment", "gathering", "ready", "task_created", "settled"]
 TaskStage = Literal[
     "candidate",
@@ -25,6 +30,15 @@ EvidenceStatus = Literal["usable", "weak_related", "discarded"]
 InterventionLevel = Literal["remind", "limit", "refuse"]
 
 
+def default_run_budget() -> dict[str, int]:
+    return {
+        "max_turns": 8,
+        "max_tool_calls": 16,
+        "max_search_queries": 0,
+        "max_source_parses": 0,
+    }
+
+
 @dataclass(frozen=True)
 class CaptureItem:
     id: str
@@ -38,6 +52,79 @@ class CaptureItem:
     emotion_keywords: list[str] = field(default_factory=list)
     candidate_topics: list[str] = field(default_factory=list)
     status: CaptureStatus = "captured"
+    source_type: SourceType = "text"
+    source_uri: str = ""
+    source_platform: str = "unknown"
+    original_text: str = ""
+    ai_summary_draft: str = ""
+    user_summary: str = ""
+    summary_status: SummaryStatus = "summary_pending"
+    parse_status: ParseStatus = "not_parsed"
+    attachment_ids: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class AgentRun:
+    id: str
+    input_capture_ids: list[str]
+    created_at: str
+    updated_at: str
+    mode: str = "surprise"
+    status: RunStatus = "queued"
+    autonomy_level: AutonomyLevel = "inbox_only"
+    budget: dict[str, int] = field(default_factory=default_run_budget)
+    blocked_tool_count: int = 0
+    tool_call_count: int = 0
+    search_query_count: int = 0
+
+
+@dataclass(frozen=True)
+class StateEvent:
+    id: str
+    seq: int
+    run_id: str
+    type: str
+    payload: dict
+    created_at: str
+
+
+@dataclass(frozen=True)
+class SparkCard:
+    id: str
+    run_id: str
+    title: str
+    angle: str
+    why_interesting: str
+    source_capture_ids: list[str]
+    tweet_seed_ids: list[str]
+    surprise_score: float
+    confidence: Literal["weak", "medium", "strong"]
+    status: str
+    created_at: str
+
+
+@dataclass(frozen=True)
+class TweetSeed:
+    id: str
+    run_id: str
+    spark_card_id: str
+    text: str
+    style: str
+    source_capture_ids: list[str]
+    publish_status: str
+    created_at: str
+
+
+@dataclass(frozen=True)
+class ConnectionInsight:
+    id: str
+    run_id: str
+    relation_type: str
+    claim: str
+    explanation: str
+    source_capture_ids: list[str]
+    confidence: Literal["weak", "medium", "strong"]
+    created_at: str
 
 
 @dataclass(frozen=True)
