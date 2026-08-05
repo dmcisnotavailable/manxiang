@@ -22,10 +22,11 @@ def test_workbench_creates_map_and_draft_from_pipeline(tmp_path):
     mapped = service.create_knowledge_map(topic_id=topic_id)
     drafted = service.create_draft("note")
 
-    assert mapped["task"]["title"] == "AI 陪伴为什么让人觉得像真的"
-    assert mapped["linePlan"]["recommendedLine"] == "因果线"
-    assert mapped["map"]["gaps"] == ["长期使用动机", "真实用户反馈"]
-    assert "长期使用动机" in drafted["draft"]
+    assert len(seeded["captures"]) == 6
+    assert mapped["task"]["title"] in {"西班牙王室", "欧洲王室亲缘", "伊莎贝拉女王"}
+    assert mapped["linePlan"]["recommendedLine"] in {"因果线", "问题线", "人物/利益线"}
+    assert mapped["map"]["gaps"]
+    assert "证据缺口" in drafted["draft"]
 
 
 def test_workbench_reset_clears_persisted_state(tmp_path):

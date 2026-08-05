@@ -18,7 +18,7 @@ class CaptureProcessor:
 
     def capture(self, type: CaptureType, source: str, user_note: str = "", raw_text: str = "") -> CaptureItem:
         captured_at = self.clock()
-        item_id = self._make_id(source=source, user_note=user_note, captured_at=captured_at)
+        item_id = self._make_id(source=source, user_note=user_note, raw_text=raw_text, captured_at=captured_at)
         source_type = self._source_type_for(type=type, source=source)
         original_text = raw_text or (source if source_type == "text" else "")
         parsed = self._parse_source(source_type=source_type, source=source, user_note=user_note)
@@ -49,8 +49,8 @@ class CaptureProcessor:
             attachment_ids=attachment_ids,
         )
 
-    def _make_id(self, source: str, user_note: str, captured_at: str) -> str:
-        digest = sha1(f"{source}|{user_note}|{captured_at}".encode("utf-8")).hexdigest()[:10]
+    def _make_id(self, source: str, user_note: str, raw_text: str, captured_at: str) -> str:
+        digest = sha1(f"{source}|{user_note}|{raw_text}|{captured_at}".encode("utf-8")).hexdigest()[:10]
         return f"cap_{digest}"
 
     def _infer_tags(self, text: str) -> list[str]:

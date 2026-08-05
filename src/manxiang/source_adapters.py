@@ -27,7 +27,7 @@ def infer_v0b_topics(text: str) -> list[str]:
     for keyword, topic in rules:
         if keyword in normalized and topic not in topics:
             topics.append(topic)
-    return topics or ["未分类收藏"]
+    return topics
 
 
 def parse_url_light(source_uri: str, user_note: str = "", timeout: float = 3.0) -> ParsedSource:

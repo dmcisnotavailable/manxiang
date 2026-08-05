@@ -1,7 +1,10 @@
 from dataclasses import replace
 from hashlib import sha1
 
-from manxiang.schema import AgentRun
+from manxiang.guardrails import before_tool_call
+from manxiang.reducers import reduce_tool_result
+from manxiang.runtime import PiAgentBridge
+from manxiang.schema import AgentRun, CaptureItem
 from manxiang.storage import JsonStore
 
 
@@ -31,3 +34,26 @@ def confirm_search(store: JsonStore, run: AgentRun, gap_id: str, max_search_quer
     store._upsert("runs.json", updated.id, updated)
     store.append_event(updated.id, "user.input.required", {"resolved": True, "gap_id": gap_id})
     return updated
+
+
+def run_surprise_with_bridge(
+    store: JsonStore,
+    run: AgentRun,
+    captures: list[CaptureItem],
+    bridge: PiAgentBridge | None = None,
+) -> dict:
+    bridge = bridge or PiAgentBridge()
+    result = bridge.run(run, captures)
+    for event in result.get("events", []):
+        tool_name = event.get("tool_name", "")
+        if event["type"] == "tool.started":
+            decision = before_tool_call(run, tool_name, event.get("payload", {}))
+            if decision:
+                store.append_event(run.id, "tool.blocked", {"tool_name": tool_name, **decision})
+                continue
+            store.append_event(run.id, "tool.started", event)
+        elif event["type"] == "tool.completed":
+            store.append_event(run.id, "tool.completed", event)
+            if event.get("payload") and tool_name:
+                reduce_tool_result(store, run.id, tool_name, event["payload"])
+    return result
