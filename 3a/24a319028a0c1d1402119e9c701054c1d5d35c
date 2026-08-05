@@ -1,0 +1,27 @@
+src/manxiang/capture.py
+  s_c9cd3c530a4290::t_f6b959572ca328 3,5-6,19,22-26,28,30,43-49,67-72,88-94,102-104,109-122
+src/manxiang/source_adapters.py
+  s_c9cd3c530a4290::t_bef4986406c3f2 13,17,19,28
+  s_c9cd3c530a4290::t_ff3119c390ff8a 1-12,14-16,18,20-27,29-50
+tests/test_v0b_capture.py
+  s_c9cd3c530a4290::t_c131364855942f 1-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "3a24a319028a0c1d1402119e9c701054c1d5d35c",
+  "prompts": {},
+  "sessions": {
+    "s_c9cd3c530a4290": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd1dd-3fa6-7ef0-a923-5e343131abd4",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 132,
+      "total_deletions": 6,
+      "accepted_lines": 131
+    }
+  }
+}
