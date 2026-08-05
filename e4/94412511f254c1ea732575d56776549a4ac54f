@@ -1,0 +1,29 @@
+src/manxiang/runs.py
+  s_c9cd3c530a4290::t_d525a8b2fbcadd 1-33
+src/manxiang/guardrails.py
+  s_c9cd3c530a4290::t_dfe4b4619bde58 1-14
+tests/test_v0b_reducers.py
+  s_c9cd3c530a4290::t_e08fd591544ecd 1-42
+src/manxiang/reducers.py
+  s_c9cd3c530a4290::t_f38abb60c96d79 1-60
+tests/test_v0b_guardrails.py
+  s_c9cd3c530a4290::t_709488e11aaac4 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "e494412511f254c1ea732575d56776549a4ac54f",
+  "prompts": {},
+  "sessions": {
+    "s_c9cd3c530a4290": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd1dd-3fa6-7ef0-a923-5e343131abd4",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 140,
+      "accepted_lines": 140
+    }
+  }
+}
