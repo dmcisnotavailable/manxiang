@@ -96,6 +96,60 @@ def test_agent_map_from_bridge_rejects_template_placeholders(tmp_path):
     assert all(gap["search_query"] for gap in created[-1]["evidence_gaps"])
 
 
+def test_collection_reading_tool_result_is_persisted(tmp_path):
+    store = JsonStore(tmp_path)
+    run = AgentRun(
+        id="run_1",
+        input_capture_ids=["cap_1", "cap_2"],
+        created_at="2026-08-06T10:00:00+08:00",
+        updated_at="2026-08-06T10:00:00+08:00",
+    )
+
+    class FakeBridge:
+        def run(self, _run, _captures):
+            return {
+                "model_name": "fake-realistic-model",
+                "tool_calls": ["record_collection_reading"],
+                "events": [
+                    {
+                        "type": "tool.completed",
+                        "tool_name": "record_collection_reading",
+                        "payload": {
+                            "reading": {
+                                "user_intent": "想把王室、普拉多和哥伦布这些线索串成一个可表达的主题。",
+                                "promising_question": "这些收藏如何从名字和亲缘误读升级到西班牙王权叙事？",
+                                "shallow_interpretations_to_avoid": ["只说欧洲王室都有亲戚", "只说普拉多有很多王室画"],
+                                "hypotheses": [
+                                    {
+                                        "claim": "译名相似需要和真实谱系关系分开处理。",
+                                        "status": "needs_evidence",
+                                        "source_capture_ids": ["cap_1"],
+                                    },
+                                    {
+                                        "claim": "普拉多可以作为王室叙事的图像证据入口。",
+                                        "status": "usable_lead",
+                                        "source_capture_ids": ["cap_2"],
+                                    },
+                                    {
+                                        "claim": "伊莎贝拉和哥伦布把王室问题接到帝国扩张问题。",
+                                        "status": "user_hunch",
+                                        "source_capture_ids": ["cap_6"],
+                                    },
+                                ],
+                            }
+                        },
+                    }
+                ],
+            }
+
+    run_surprise_with_bridge(store, run, [], bridge=FakeBridge())
+
+    events = store.replay_events("run_1")
+    readings = [event.payload for event in events if event.type == "collection.reading.recorded"]
+    assert readings
+    assert "王权叙事" in readings[-1]["reading"]["promising_question"]
+
+
 def test_workbench_state_uses_agent_map_after_surprise_run(tmp_path):
     service = WorkbenchService(storage_root=tmp_path, clock=lambda: "2026-08-06T10:00:00+08:00")
     service.seed_demo()

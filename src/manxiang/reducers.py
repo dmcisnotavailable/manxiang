@@ -11,6 +11,16 @@ TEMPLATE_PLACEHOLDERS = [
 
 
 def reduce_tool_result(store: JsonStore, run_id: str, tool_name: str, payload: dict) -> None:
+    if tool_name == "record_collection_reading":
+        reading = payload["reading"]
+        if not reading.get("hypotheses"):
+            raise ValueError("CollectionReading requires hypotheses")
+        for hypothesis in reading["hypotheses"]:
+            if not hypothesis.get("source_capture_ids"):
+                raise ValueError("CollectionReading hypothesis requires source_capture_ids")
+        store.append_event(run_id, "collection.reading.recorded", payload)
+        return
+
     if tool_name in {"generate_spark_cards", "create_spark_cards"}:
         for card in payload["spark_cards"]:
             if not card.get("source_capture_ids"):
