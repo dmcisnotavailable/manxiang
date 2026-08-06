@@ -1,12 +1,12 @@
+evals/manxiang/rubrics/research_map.json
+  s_3ba2f26277c9bb::t_813dab9c2dc5dc 1-18
+tests/test_v1_evals.py
+  s_3ba2f26277c9bb::t_61acc8fcf80d90 1-18
+evals/manxiang/cases/spanish_royal_family.json
+  s_3ba2f26277c9bb::t_813dab9c2dc5dc 1-7
 evals/manxiang/run_eval.py
   s_3ba2f26277c9bb::t_29ba916303bb5f 4,9-14
   s_3ba2f26277c9bb::t_813dab9c2dc5dc 1-3,5-8,15-40
-evals/manxiang/rubrics/research_map.json
-  s_3ba2f26277c9bb::t_813dab9c2dc5dc 1-18
-evals/manxiang/cases/spanish_royal_family.json
-  s_3ba2f26277c9bb::t_813dab9c2dc5dc 1-7
-tests/test_v1_evals.py
-  s_3ba2f26277c9bb::t_61acc8fcf80d90 1-18
 src/manxiang/evals.py
   s_3ba2f26277c9bb::t_813dab9c2dc5dc 1-24
 ---
