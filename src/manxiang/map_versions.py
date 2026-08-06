@@ -20,9 +20,9 @@ class KnowledgeMapVersioner:
             version=previous.version + 1,
             text_view=text_view or previous.text_view,
             tree=tree,
-            input_capture_ids=input_capture_ids,
-            input_chunk_ids=input_chunk_ids,
-            evidence_ids=evidence_ids,
+            input_capture_ids=list(input_capture_ids),
+            input_chunk_ids=list(input_chunk_ids),
+            evidence_ids=list(evidence_ids),
         )
 
     def diff(self, before: KnowledgeMap, after: KnowledgeMap) -> dict[str, Any]:
@@ -55,10 +55,16 @@ class KnowledgeMapVersioner:
         }
 
     def _flatten(self, root: TreeNode) -> dict[str, TreeNode]:
-        nodes = {root.id: root}
-        for child in root.children:
-            nodes.update(self._flatten(child))
+        nodes: dict[str, TreeNode] = {}
+        self._collect_nodes(root, nodes)
         return nodes
+
+    def _collect_nodes(self, node: TreeNode, nodes: dict[str, TreeNode]) -> None:
+        if node.id in nodes:
+            raise ValueError(f"Duplicate tree node id: {node.id}")
+        nodes[node.id] = node
+        for child in node.children:
+            self._collect_nodes(child, nodes)
 
     def _node_changed(self, before: TreeNode, after: TreeNode) -> bool:
         return (
