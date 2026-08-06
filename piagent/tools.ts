@@ -32,6 +32,25 @@ const evidenceGap = Type.Object({
   source_capture_ids: sourceIds,
 });
 
+const sourceRef = Type.Object({
+  artifact_id: Type.String(),
+  chunk_id: Type.String(),
+  quote: Type.String({ minLength: 4 }),
+  anchor: Type.String(),
+});
+
+const citedNode = Type.Object({
+  id: Type.String(),
+  label: Type.String({ minLength: 6 }),
+  confidence: Type.Union([
+    Type.Literal("user_impression"),
+    Type.Literal("hypothesis"),
+    Type.Literal("needs_evidence"),
+    Type.Literal("fact"),
+  ]),
+  source_refs: Type.Array(sourceRef),
+});
+
 export const requiredToolNames = [
   "record_collection_reading",
   "mine_collection_surprises",
@@ -44,6 +63,11 @@ export const requiredToolNames = [
   "search_evidence",
   "attach_evidence",
   "draft_expression_variants",
+  "create_research_contract",
+  "request_source_parse",
+  "retrieve_evidence_chunks",
+  "request_web_search",
+  "revise_knowledge_map",
 ];
 
 export function manxiangTools(): AgentTool[] {
@@ -239,6 +263,65 @@ export function manxiangTools(): AgentTool[] {
           }),
           { minItems: 1 },
         ),
+      }),
+    ),
+    submitTool(
+      "create_research_contract",
+      "Create research contract",
+      "提交研究契约，明确本轮目标、允许范围、禁止范围和完成定义。",
+      Type.Object({
+        contract: Type.Object({
+          task_id: Type.String(),
+          title: Type.String({ minLength: 6 }),
+          goal: Type.String({ minLength: 12 }),
+          allowed_scope: Type.Array(Type.String({ minLength: 2 }), { minItems: 1 }),
+          blocked_scope: Type.Array(Type.String({ minLength: 2 }), { minItems: 1 }),
+          completion_definition: Type.String({ minLength: 12 }),
+        }),
+      }),
+    ),
+    submitTool(
+      "request_source_parse",
+      "Request source parse",
+      "请求按需解析某条收藏。必须说明服务哪个证据缺口或研究节点。",
+      Type.Object({
+        capture_id: Type.String(),
+        reason: Type.String({ minLength: 12 }),
+        gap_id: Type.Optional(Type.String()),
+      }),
+    ),
+    submitTool(
+      "retrieve_evidence_chunks",
+      "Retrieve evidence chunks",
+      "围绕证据缺口召回 SourceChunk。只能服务当前 gap_id。",
+      Type.Object({
+        gap_id: Type.String(),
+        query: Type.String({ minLength: 4 }),
+        limit: Type.Number(),
+      }),
+    ),
+    submitTool(
+      "request_web_search",
+      "Request web search",
+      "请求外部搜索。Python 护栏会检查 gap_id、搜索目标和停止条件。",
+      Type.Object({
+        gap_id: Type.String(),
+        query: Type.String({ minLength: 8 }),
+        search_goal: Type.String({ minLength: 12 }),
+        stop_condition: Type.String({ minLength: 12 }),
+        max_results: Type.Number(),
+      }),
+    ),
+    submitTool(
+      "revise_knowledge_map",
+      "Revise knowledge map",
+      "基于证据修订知识地图。confidence=fact 的节点必须带 source_refs。",
+      Type.Object({
+        map: Type.Object({
+          id: Type.String(),
+          version: Type.Number(),
+          nodes: Type.Array(citedNode, { minItems: 1 }),
+        }),
       }),
     ),
   ];

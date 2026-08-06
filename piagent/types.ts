@@ -21,3 +21,23 @@ export interface BridgeEvent {
   tool_name?: string;
   payload?: unknown;
 }
+
+export interface BridgeSourceRef {
+  artifact_id: string;
+  chunk_id: string;
+  quote: string;
+  anchor: string;
+}
+
+export interface BridgeCitedNode {
+  id: string;
+  label: string;
+  confidence: "user_impression" | "hypothesis" | "needs_evidence" | "fact";
+  source_refs: BridgeSourceRef[];
+}
+
+export interface BridgeV1MapPayload {
+  id: string;
+  version: number;
+  nodes: BridgeCitedNode[];
+}
