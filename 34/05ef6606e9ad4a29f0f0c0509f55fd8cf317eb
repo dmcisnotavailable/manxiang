@@ -1,8 +1,8 @@
 src/manxiang/guardrails.py
   s_3ba2f26277c9bb::t_29a35728fd2ecd 4-28,31-35,37,50,52-54,60,64,66,70-74
 tests/test_v1_guardrails.py
-  s_3ba2f26277c9bb::t_079c9d565a91b4 40-44,50-54,60-64
   s_3ba2f26277c9bb::t_7308b63e77a06d 25-38,49,55-59,65-68,79-111,130-136
+  s_3ba2f26277c9bb::t_079c9d565a91b4 40-44,50-54,60-64
   h_f57af7de2b9509 137-139
 ---
 {
