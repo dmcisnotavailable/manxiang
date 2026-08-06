@@ -50,6 +50,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if path == "/api/state":
             self._send_json(self.workbench.state())
             return
+        if path == "/v1/state":
+            self._send_json(self.workbench.v1_state())
+            return
         if path.startswith("/v1/runs/") and path.endswith("/events"):
             run_id = path.removeprefix("/v1/runs/").removesuffix("/events").strip("/")
             after_seq = int(parse_qs(parsed.query).get("after_seq", ["0"])[0])
@@ -88,6 +91,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     gap_id=payload.get("gap_id", ""),
                     max_search_queries=int(payload.get("max_search_queries", 3)),
                 )
+            elif path == "/v1/source-parses":
+                result = self.workbench.parse_capture_for_v1(payload.get("capture_id", ""))
             elif path == "/api/topics":
                 result = self.workbench.discover_topics()
             elif path == "/api/select-topic":

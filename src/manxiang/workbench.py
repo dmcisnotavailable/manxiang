@@ -9,6 +9,7 @@ from manxiang.fixtures import v0b_capture_fixtures
 from manxiang.pipeline import ManxiangPipeline
 from manxiang.runs import confirm_search, create_run, run_surprise_with_bridge
 from manxiang.schema import AgentMode, AgentRun, CaptureType, KnowledgeMap, LinePlan, ResearchTask
+from manxiang.source_parser import SourceParser
 
 
 class WorkbenchService:
@@ -137,6 +138,32 @@ class WorkbenchService:
             "notice": self.notice,
             "surpriseRun": self.surprise_run,
             "surpriseResult": self.surprise_result,
+        }
+
+    def v1_state(self) -> dict[str, Any]:
+        events = []
+        if self.surprise_run:
+            events = [
+                _to_jsonable(event)
+                for event in self.pipeline.store.replay_events(self.surprise_run["id"])
+            ]
+        return {
+            **self.state(),
+            "mapVersions": [_to_jsonable(item) for item in self.pipeline.store.list_maps()],
+            "recentEvents": events[-20:],
+            "sourceChunks": getattr(self, "v1_source_chunks", []),
+        }
+
+    def parse_capture_for_v1(self, capture_id: str) -> dict[str, Any]:
+        captures = {capture.id: capture for capture in self.pipeline.store.list_captures()}
+        if capture_id not in captures:
+            raise ValueError(f"Unknown capture id: {capture_id}")
+        parser = SourceParser(clock=self.clock)
+        artifact, chunks = parser.parse_capture(captures[capture_id])
+        self.v1_source_chunks = [_to_jsonable(chunk) for chunk in chunks]
+        return {
+            "artifact": _to_jsonable(artifact),
+            "chunks": [_to_jsonable(chunk) for chunk in chunks],
         }
 
     def _reset_runtime(self) -> None:
