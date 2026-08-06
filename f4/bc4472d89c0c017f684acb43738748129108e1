@@ -1,9 +1,9 @@
+tests/test_v1_sqlite_store.py
+  s_3ba2f26277c9bb::t_83ef653d24bd48 1-54
 src/manxiang/repositories.py
   s_3ba2f26277c9bb::t_e4225c433b11b2 1-32
 src/manxiang/sqlite_store.py
   s_3ba2f26277c9bb::t_5b1aa552f0fd64 1-124
-tests/test_v1_sqlite_store.py
-  s_3ba2f26277c9bb::t_83ef653d24bd48 1-54
 ---
 {
   "schema_version": "authorship/3.0.0",
