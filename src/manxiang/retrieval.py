@@ -10,6 +10,8 @@ from manxiang.schema import SourceChunk
 class RetrievalResult:
     chunk: SourceChunk
     score: float
+    coverage: float
+    density: float
     matched_terms: tuple[str, ...]
 
 
@@ -21,8 +23,8 @@ class KeywordRetriever:
         if not terms:
             return []
         results = [self._score_chunk(terms, chunk) for chunk in chunks]
-        non_zero = [result for result in results if result.score > 0]
-        return sorted(non_zero, key=lambda result: result.score, reverse=True)[:limit]
+        non_zero = [result for result in results if result.coverage > 0]
+        return sorted(non_zero, key=lambda result: (result.coverage, result.density), reverse=True)[:limit]
 
     def _score_chunk(self, terms: list[str], chunk: SourceChunk) -> RetrievalResult:
         normalized = chunk.text.lower()
@@ -31,7 +33,9 @@ class KeywordRetriever:
         density = len(matched) / max(1, len(chunk.text))
         return RetrievalResult(
             chunk=chunk,
-            score=round(coverage * 100 + density, 6),
+            score=round(coverage, 6),
+            coverage=coverage,
+            density=density,
             matched_terms=matched,
         )
 

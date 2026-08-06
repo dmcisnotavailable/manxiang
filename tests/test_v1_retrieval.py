@@ -51,6 +51,22 @@ def test_keyword_retriever_coverage_dominates_density():
     assert [result.chunk.id for result in results] == ["long_full", "short_partial"]
 
 
+def test_keyword_retriever_strictly_prioritizes_coverage_over_extreme_density():
+    retriever = KeywordRetriever()
+    terms = ["a" * length for length in range(1, 121)]
+    chunks = [
+        chunk("short_partial", "a" * 119),
+        chunk("long_full", "a" * 120 + " padding" * 200),
+    ]
+
+    results = retriever.retrieve(" ".join(terms), chunks, limit=2)
+
+    assert [result.chunk.id for result in results] == ["long_full", "short_partial"]
+    assert results[0].coverage == 1.0
+    assert results[0].density < results[1].density
+    assert results[1].coverage == 119 / 120
+
+
 def test_keyword_retriever_splits_common_punctuation():
     retriever = KeywordRetriever()
     chunks = [chunk("chunk_1", "伊莎贝拉一世资助哥伦布远航，也关联西班牙王室叙事。")]
