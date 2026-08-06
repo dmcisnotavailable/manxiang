@@ -1,0 +1,24 @@
+src/manxiang/retrieval.py
+  s_3ba2f26277c9bb::t_ffc0ab8bf16107 13-14,26-27,36-38
+tests/test_v1_retrieval.py
+  s_3ba2f26277c9bb::t_c3cc2c54302001 54-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "20a397381f2dce7f9caf8eceee40275d74e331da",
+  "prompts": {},
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 19,
+      "total_deletions": 3,
+      "accepted_lines": 19
+    }
+  }
+}
