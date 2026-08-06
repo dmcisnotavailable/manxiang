@@ -49,6 +49,8 @@ class SourceParser:
     def _uri_for(self, capture: CaptureItem) -> str:
         if capture.source_uri:
             return capture.source_uri
+        if capture.type == "url" or capture.source.startswith(("http://", "https://")):
+            return capture.source
         if capture.source_type == "text":
             return f"manual://{capture.id}"
         return capture.source
