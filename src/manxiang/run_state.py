@@ -19,6 +19,8 @@ class RunStateMachine:
         )
 
     def confirm_source_parse(self, run: AgentRun, max_source_parses: int = 3) -> AgentRun:
+        self._ensure_waiting_user(run)
+        self._ensure_non_negative(max_source_parses, "max_source_parses")
         return replace(
             run,
             status="exploring",
@@ -32,6 +34,8 @@ class RunStateMachine:
         )
 
     def confirm_web_search(self, run: AgentRun, max_search_queries: int = 3) -> AgentRun:
+        self._ensure_waiting_user(run)
+        self._ensure_non_negative(max_search_queries, "max_search_queries")
         return replace(
             run,
             status="exploring",
@@ -39,3 +43,11 @@ class RunStateMachine:
             budget={**run.budget, "max_search_queries": max_search_queries},
             updated_at=self.clock(),
         )
+
+    def _ensure_waiting_user(self, run: AgentRun) -> None:
+        if run.status != "waiting_user":
+            raise ValueError("run must be waiting_user before confirming more autonomy")
+
+    def _ensure_non_negative(self, value: int, name: str) -> None:
+        if value < 0:
+            raise ValueError(f"{name} must be non-negative")

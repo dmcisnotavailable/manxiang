@@ -3,6 +3,7 @@ from hashlib import sha1
 
 from manxiang.guardrails import before_tool_call
 from manxiang.reducers import reduce_tool_result
+from manxiang.run_state import RunStateMachine
 from manxiang.runtime import PiAgentBridge
 from manxiang.schema import AgentRun, CaptureItem
 from manxiang.storage import JsonStore
@@ -41,19 +42,29 @@ def run_surprise_with_bridge(
     run: AgentRun,
     captures: list[CaptureItem],
     bridge: PiAgentBridge | None = None,
+    clock=None,
 ) -> dict:
     bridge = bridge or PiAgentBridge()
+    machine = RunStateMachine(clock=clock or (lambda: run.updated_at))
+    blocked_tool_counts: dict[str, int] = {}
     result = bridge.run(run, captures)
     for event in result.get("events", []):
         tool_name = event.get("tool_name", "")
         if event["type"] == "tool.started":
             decision = before_tool_call(run, tool_name, event.get("payload", {}))
             if decision:
-                store.append_event(run.id, "tool.blocked", {"tool_name": tool_name, **decision})
-                store.append_event(run.id, "user.input.required", {"tool_name": tool_name, "reason": decision["reason"]})
+                reason = decision.get("reason", "tool call requires user confirmation")
+                run = machine.block_for_user(run, reason=reason)
+                store._upsert("runs.json", run.id, run)
+                blocked_tool_counts[tool_name] = blocked_tool_counts.get(tool_name, 0) + 1
+                store.append_event(run.id, "tool.blocked", {"tool_name": tool_name, **decision, "reason": reason})
+                store.append_event(run.id, "user.input.required", {"tool_name": tool_name, "reason": reason})
                 continue
             store.append_event(run.id, "tool.started", event)
         elif event["type"] == "tool.completed":
+            if blocked_tool_counts.get(tool_name, 0):
+                blocked_tool_counts[tool_name] -= 1
+                continue
             store.append_event(run.id, "tool.completed", event)
             if event.get("payload") and tool_name:
                 reduce_tool_result(store, run.id, tool_name, event["payload"])
