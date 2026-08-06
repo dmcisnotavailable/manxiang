@@ -1,0 +1,22 @@
+tests/test_v1_source_parser.py
+  s_3ba2f26277c9bb::t_29e604c5042ba3 36,40,47,103-136,166-170
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "d5596f80e8d62b35a99d105c1e38fb75ab10b340",
+  "prompts": {},
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 34,
+      "total_deletions": 3,
+      "accepted_lines": 34
+    }
+  }
+}
