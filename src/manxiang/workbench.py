@@ -151,7 +151,7 @@ class WorkbenchService:
             **self.state(),
             "mapVersions": [_to_jsonable(item) for item in self.pipeline.store.list_maps()],
             "recentEvents": events[-20:],
-            "sourceChunks": getattr(self, "v1_source_chunks", []),
+            "sourceChunks": self.v1_source_chunks,
         }
 
     def parse_capture_for_v1(self, capture_id: str) -> dict[str, Any]:
@@ -180,10 +180,12 @@ class WorkbenchService:
         self.notice = ""
         self.surprise_run: dict[str, Any] | None = None
         self.surprise_result: dict[str, Any] | None = None
+        self.v1_source_chunks: list[dict[str, Any]] = []
 
     def _clear_downstream(self) -> None:
         self.topics = []
         self.selected_topic_id = ""
+        self.v1_source_chunks = []
         self._clear_task_outputs()
 
     def _clear_task_outputs(self) -> None:
