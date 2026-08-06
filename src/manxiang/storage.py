@@ -12,6 +12,7 @@ from manxiang.schema import (
     KnowledgeMap,
     ParkingLotItem,
     ResearchTask,
+    SourceRef,
     TextView,
     TopicCluster,
     TreeNode,
@@ -163,6 +164,9 @@ class JsonStore:
             version=int(clean["version"]),
             text_view=TextView(**clean["text_view"]),
             tree=self._tree_from_row(clean["tree"]),
+            input_capture_ids=list(clean.get("input_capture_ids", [])),
+            input_chunk_ids=list(clean.get("input_chunk_ids", [])),
+            evidence_ids=list(clean.get("evidence_ids", [])),
         )
 
     def _tree_from_row(self, row: dict[str, Any]) -> TreeNode:
@@ -171,4 +175,9 @@ class JsonStore:
             label=row["label"],
             kind=row["kind"],
             children=[self._tree_from_row(child) for child in row.get("children", [])],
+            confidence=row.get("confidence", "hypothesis"),
+            source_refs=[
+                ref if isinstance(ref, SourceRef) else SourceRef(**ref)
+                for ref in row.get("source_refs", [])
+            ],
         )

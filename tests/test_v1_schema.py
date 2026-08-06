@@ -74,3 +74,44 @@ def test_knowledge_map_records_generation_inputs():
     assert knowledge_map.version == 2
     assert knowledge_map.input_chunk_ids == ["chunk_1"]
     assert knowledge_map.evidence_ids == ["ev_1"]
+
+
+def test_v1_schema_defaults_keep_v0b_construction_compatible():
+    first_node = TreeNode(id="node_1", label="旧式节点", kind="concept")
+    second_node = TreeNode(id="node_2", label="另一个旧式节点", kind="concept")
+    first_map = KnowledgeMap(
+        task_id="task_1",
+        version=1,
+        text_view=TextView(
+            core_question="问题",
+            mainline_summary="主线",
+            recommendation_reason="原因",
+            next_action="下一步",
+        ),
+        tree=first_node,
+    )
+    second_map = KnowledgeMap(
+        task_id="task_2",
+        version=1,
+        text_view=first_map.text_view,
+        tree=second_node,
+    )
+
+    first_node.source_refs.append(
+        SourceRef(
+            artifact_id="artifact_1",
+            chunk_id="chunk_1",
+            quote="quote",
+            anchor="text:0-5",
+        )
+    )
+    first_map.input_capture_ids.append("cap_1")
+    first_map.input_chunk_ids.append("chunk_1")
+    first_map.evidence_ids.append("ev_1")
+
+    assert first_node.confidence == "hypothesis"
+    assert second_node.confidence == "hypothesis"
+    assert second_node.source_refs == []
+    assert second_map.input_capture_ids == []
+    assert second_map.input_chunk_ids == []
+    assert second_map.evidence_ids == []
