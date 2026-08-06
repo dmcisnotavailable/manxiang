@@ -7,6 +7,8 @@ CaptureStatus = Literal["new", "captured", "light_tagged", "clustered", "used_in
 SourceType = Literal["text", "image", "url", "mixed"]
 SummaryStatus = Literal["summary_pending", "summary_confirmed", "summary_rejected"]
 ParseStatus = Literal["not_parsed", "metadata_parsed", "parse_failed"]
+SourceParseStatus = Literal["not_parsed", "parse_requested", "parsed", "parse_failed", "parse_skipped"]
+EmbeddingStatus = Literal["not_embedded", "embedded", "embedding_failed"]
 RunStatus = Literal["queued", "exploring", "waiting_user", "completed", "failed", "aborted"]
 AutonomyLevel = Literal["inbox_only", "source_parse_allowed", "web_search_allowed"]
 TopicStatus = Literal["fragment", "gathering", "ready", "task_created", "settled"]
@@ -25,9 +27,18 @@ TaskStage = Literal[
 AgentMode = Literal["strict_mentor", "gentle_editor", "research_buddy"]
 LineType = Literal["causal", "timeline", "question", "stakeholder", "emotion"]
 NodeKind = Literal["root", "core_question", "mainline", "concept", "evidence", "evidence_gap", "parking_lot", "next_action"]
+NodeConfidence = Literal["user_impression", "hypothesis", "needs_evidence", "fact"]
 EvidenceStrength = Literal["weak", "medium", "strong"]
 EvidenceStatus = Literal["usable", "weak_related", "discarded"]
 InterventionLevel = Literal["remind", "limit", "refuse"]
+CheckpointStage = Literal[
+    "captured",
+    "topic_discovered",
+    "research_scoped",
+    "map_drafted",
+    "evidence_patched",
+    "map_reviewed",
+]
 
 
 def default_run_budget() -> dict[str, int]:
@@ -85,6 +96,50 @@ class StateEvent:
     run_id: str
     type: str
     payload: dict
+    created_at: str
+
+
+@dataclass(frozen=True)
+class SourceArtifact:
+    id: str
+    capture_id: str
+    source_type: SourceType
+    uri: str
+    content_hash: str
+    parse_status: SourceParseStatus
+    parser_name: str
+    parser_version: str
+    created_at: str
+
+
+@dataclass(frozen=True)
+class SourceChunk:
+    id: str
+    artifact_id: str
+    text: str
+    start_offset: int
+    end_offset: int
+    anchor: str
+    embedding_status: EmbeddingStatus
+    created_at: str
+
+
+@dataclass(frozen=True)
+class SourceRef:
+    artifact_id: str
+    chunk_id: str
+    quote: str
+    anchor: str
+
+
+@dataclass(frozen=True)
+class Checkpoint:
+    id: str
+    run_id: str
+    stage: CheckpointStage
+    seq: int
+    state_hash: str
+    restore_pointer: str
     created_at: str
 
 
@@ -191,6 +246,8 @@ class TreeNode:
     label: str
     kind: NodeKind
     children: list["TreeNode"] = field(default_factory=list)
+    confidence: NodeConfidence = "hypothesis"
+    source_refs: list[SourceRef] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -199,6 +256,9 @@ class KnowledgeMap:
     version: int
     text_view: TextView
     tree: TreeNode
+    input_capture_ids: list[str] = field(default_factory=list)
+    input_chunk_ids: list[str] = field(default_factory=list)
+    evidence_ids: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
