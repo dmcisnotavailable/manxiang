@@ -1,7 +1,7 @@
-src/manxiang/schema.py
-  s_3ba2f26277c9bb::t_1b4910addeb495 10-11,30,34-41,102-145,249-250,259-261
 tests/test_v1_schema.py
   s_3ba2f26277c9bb::t_51369435427a0d 1-76
+src/manxiang/schema.py
+  s_3ba2f26277c9bb::t_1b4910addeb495 10-11,30,34-41,102-145,249-250,259-261
 ---
 {
   "schema_version": "authorship/3.0.0",
