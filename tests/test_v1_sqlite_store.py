@@ -49,6 +49,12 @@ def test_sqlite_store_saves_sources_chunks_and_events(tmp_path):
     store.save_source_chunk(chunk)
     event = store.append_event("run_1", "source.chunk.created", {"chunk_id": "chunk_1"})
 
+    saved_artifact = store.get_source_artifact("artifact_1")
+    assert saved_artifact is not None
+    assert saved_artifact.id == "artifact_1"
+    assert saved_artifact.capture_id == "cap_1"
+    assert saved_artifact.uri == "manual://cap_1"
+    assert saved_artifact.parse_status == "parsed"
     assert store.list_source_chunks("artifact_1")[0].id == "chunk_1"
     assert store.replay_events("run_1")[0].id == event.id
     assert store.replay_events("run_1")[0].payload == {"chunk_id": "chunk_1"}
