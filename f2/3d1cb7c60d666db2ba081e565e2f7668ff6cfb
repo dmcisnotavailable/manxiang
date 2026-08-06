@@ -1,0 +1,31 @@
+piagent/prompts.ts
+  s_3ba2f26277c9bb::t_bf4374fbcda8bb 27-30
+piagent/types.ts
+  s_3ba2f26277c9bb::t_fdb21dd1b92aad 24-43
+piagent/tools.ts
+  s_3ba2f26277c9bb::t_fe5e7cf0a60afc 35-53,66-70,268-324
+  h_f57af7de2b9509 325-326
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "f23d1cb7c60d666db2ba081e565e2f7668ff6cfb",
+  "prompts": {},
+  "humans": {
+    "h_f57af7de2b9509": {
+      "author": "dmcisnotavailable <1503279384@qq.com>"
+    }
+  },
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 102,
+      "accepted_lines": 102
+    }
+  }
+}
