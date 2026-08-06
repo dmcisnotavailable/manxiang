@@ -1,8 +1,17 @@
 from manxiang.storage import JsonStore
 
 
+TEMPLATE_PLACEHOLDERS = [
+    "我已知道什么",
+    "我还不懂什么",
+    "哪个问题最关键",
+    "下一步验证什么",
+    "核心问题还不清楚",
+]
+
+
 def reduce_tool_result(store: JsonStore, run_id: str, tool_name: str, payload: dict) -> None:
-    if tool_name == "generate_spark_cards":
+    if tool_name in {"generate_spark_cards", "create_spark_cards"}:
         for card in payload["spark_cards"]:
             if not card.get("source_capture_ids"):
                 raise ValueError("SparkCard requires source_capture_ids")
@@ -29,6 +38,11 @@ def reduce_tool_result(store: JsonStore, run_id: str, tool_name: str, payload: d
 
     if tool_name == "synthesize_exploration_board":
         store.append_event(run_id, "exploration.board.created", payload["exploration_board"])
+        return
+
+    if tool_name == "create_knowledge_map":
+        _validate_agent_map(payload["map"])
+        store.append_event(run_id, "map.created", payload["map"])
         return
 
     if tool_name == "generate_knowledge_map":
@@ -58,3 +72,25 @@ def reduce_tool_result(store: JsonStore, run_id: str, tool_name: str, payload: d
         return
 
     raise ValueError(f"Unknown reducer tool: {tool_name}")
+
+
+def _validate_agent_map(map_payload: dict) -> None:
+    text = str(map_payload)
+    if any(placeholder in text for placeholder in TEMPLATE_PLACEHOLDERS):
+        raise ValueError("Agent map contains template placeholders")
+
+    insights = map_payload.get("non_obvious_insights", [])
+    if len(insights) < 3:
+        raise ValueError("Agent map requires at least 3 non_obvious_insights")
+    for insight in insights:
+        if not insight.get("source_capture_ids"):
+            raise ValueError("Agent insight requires source_capture_ids")
+        if len(insight.get("claim", "")) < 12:
+            raise ValueError("Agent insight claim is too shallow")
+
+    gaps = map_payload.get("evidence_gaps", [])
+    if len(gaps) < 2:
+        raise ValueError("Agent map requires at least 2 evidence_gaps")
+    for gap in gaps:
+        if not gap.get("search_query"):
+            raise ValueError("Evidence gap requires search_query")

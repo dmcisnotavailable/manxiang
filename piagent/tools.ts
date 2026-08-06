@@ -1,5 +1,5 @@
 import type { AgentTool, AgentToolResult } from "@earendil-works/pi-agent-core";
-import { Type } from "typebox";
+import { Type, type TSchema } from "typebox";
 
 type Details = Record<string, unknown>;
 
@@ -10,24 +10,36 @@ function result(details: Details): AgentToolResult<Details> {
   };
 }
 
-function tool(name: string, label: string, description: string, parameters: ReturnType<typeof Type.Object>, details: Details): AgentTool {
+function submitTool(name: string, label: string, description: string, parameters: TSchema): AgentTool {
   return {
     name,
     label,
     description,
     parameters,
-    execute: async () => result(details),
+    execute: async (_toolCallId, params) => result(params as Details),
   };
 }
 
+const sourceIds = Type.Array(Type.String(), {
+  minItems: 1,
+  description: "必须引用真实 capture id，不能编造。",
+});
+
+const evidenceGap = Type.Object({
+  id: Type.String(),
+  description: Type.String({ minLength: 12 }),
+  search_query: Type.String({ minLength: 8 }),
+  source_capture_ids: sourceIds,
+});
+
 export const requiredToolNames = [
-  "explore_captures",
+  "record_collection_reading",
   "mine_collection_surprises",
-  "generate_spark_cards",
+  "create_spark_cards",
   "draft_tweet_seeds",
   "propose_exploration_threads",
   "synthesize_exploration_board",
-  "generate_knowledge_map",
+  "create_knowledge_map",
   "mark_evidence_gap",
   "search_evidence",
   "attach_evidence",
@@ -36,250 +48,198 @@ export const requiredToolNames = [
 
 export function manxiangTools(): AgentTool[] {
   return [
-    tool(
-      "explore_captures",
-      "Explore captures",
-      "Extract themes, tensions, and questions from capture ids.",
+    submitTool(
+      "record_collection_reading",
+      "Record collection reading",
+      "提交你对全部收藏的整体阅读。必须区分用户猜想、待验证事实和可用线索。",
       Type.Object({
-        captureIds: Type.Array(Type.String()),
-        includePending: Type.Boolean(),
-        maxQuestions: Type.Number(),
+        reading: Type.Object({
+          user_intent: Type.String({ minLength: 12 }),
+          promising_question: Type.String({ minLength: 12 }),
+          shallow_interpretations_to_avoid: Type.Array(Type.String({ minLength: 8 }), { minItems: 2 }),
+          hypotheses: Type.Array(
+            Type.Object({
+              claim: Type.String({ minLength: 12 }),
+              status: Type.Union([Type.Literal("user_hunch"), Type.Literal("needs_evidence"), Type.Literal("usable_lead")]),
+              source_capture_ids: sourceIds,
+            }),
+            { minItems: 3 },
+          ),
+        }),
       }),
-      {
-        themes: ["西班牙王室", "普拉多博物馆", "哥伦布", "王室译名"],
-        tensions: ["用户印象不能直接当事实", "译名相似不等于血缘关系"],
-        questions: [
-          "伊莎贝拉和伊丽莎白是否有血缘关系？",
-          "伊莎贝拉女王和哥伦布的具体关系是什么？",
-          "费利佩和菲利普是什么语言或译名关系？",
-        ],
-      },
     ),
-    tool(
+    submitTool(
       "mine_collection_surprises",
       "Mine collection surprises",
-      "Find unexpected connections across captures.",
-      Type.Object({ captureIds: Type.Array(Type.String()) }),
-      {
-        connection_insights: [
-          {
-            id: "insight_royal_columbus",
-            relation_type: "cross_capture_connection",
-            claim: "王室世系、普拉多绘画和哥伦布线索可以汇成一条西班牙王权叙事线。",
-            explanation: "这些收藏都指向王权如何通过婚姻、赞助、艺术和航海扩张被看见。",
-            source_capture_ids: ["cap_1", "cap_2", "cap_5", "cap_6"],
-            confidence: "weak",
-          },
-        ],
-      },
+      "提交跨收藏的意外连接。不要泛泛说“王室、艺术史、哥伦布能串起来”，要说清楚为什么这个连接不明显。",
+      Type.Object({
+        connection_insights: Type.Array(
+          Type.Object({
+            id: Type.String(),
+            relation_type: Type.String(),
+            claim: Type.String({ minLength: 18 }),
+            explanation: Type.String({ minLength: 30 }),
+            source_capture_ids: sourceIds,
+            confidence: Type.Union([Type.Literal("weak"), Type.Literal("medium"), Type.Literal("strong")]),
+          }),
+          { minItems: 1 },
+        ),
+      }),
     ),
-    tool(
-      "generate_spark_cards",
-      "Generate spark cards",
-      "Create surprise cards grounded in capture ids.",
-      Type.Object({ captureIds: Type.Array(Type.String()), count: Type.Number() }),
-      {
-        spark_cards: [
-          {
-            id: "spark_royal_tree",
-            title: "一张王室世系图，把线索串起来了",
-            angle: "从女王、译名和亲缘关系进入欧洲王室网络。",
-            why_interesting: "它把看似零散的名字变成可追踪的关系问题。",
-            source_capture_ids: ["cap_1", "cap_3", "cap_5"],
-            surprise_score: 0.86,
-            confidence: "weak",
-            status: "draft",
-          },
-          {
-            id: "spark_prado_power",
-            title: "普拉多不是画库，也是一部王室八卦索引",
-            angle: "用画作背后的委托、婚姻和继承故事解释王权。",
-            why_interesting: "它让博物馆参观从看画变成读权力关系。",
-            source_capture_ids: ["cap_2", "cap_5"],
-            surprise_score: 0.8,
-            confidence: "weak",
-            status: "draft",
-          },
-          {
-            id: "spark_columbus_isabella",
-            title: "哥伦布线索让王室故事突然出海了",
-            angle: "从伊莎贝拉女王赞助航海引出西班牙国家叙事。",
-            why_interesting: "它把人物亲缘问题扩展成欧洲和美洲历史交汇点。",
-            source_capture_ids: ["cap_4", "cap_6"],
-            surprise_score: 0.83,
-            confidence: "weak",
-            status: "draft",
-          },
-        ],
-      },
+    submitTool(
+      "create_spark_cards",
+      "Create spark cards",
+      "提交能让用户感到“原来还能这样看”的灵感卡。每张卡必须绑定真实 capture。",
+      Type.Object({
+        spark_cards: Type.Array(
+          Type.Object({
+            id: Type.String(),
+            title: Type.String({ minLength: 8 }),
+            angle: Type.String({ minLength: 18 }),
+            why_interesting: Type.String({ minLength: 24 }),
+            source_capture_ids: sourceIds,
+            surprise_score: Type.Number(),
+            confidence: Type.Union([Type.Literal("weak"), Type.Literal("medium"), Type.Literal("strong")]),
+            status: Type.String(),
+          }),
+          { minItems: 3 },
+        ),
+      }),
     ),
-    tool(
+    submitTool(
       "draft_tweet_seeds",
       "Draft tweet seeds",
-      "Draft short social writing seeds from spark cards.",
-      Type.Object({ sparkCardIds: Type.Array(Type.String()), count: Type.Number() }),
-      {
-        tweet_seeds: [
-          {
-            id: "tweet_seed_1",
-            spark_card_id: "spark_royal_tree",
-            text: "欧洲王室的名字像一张线团：伊莎贝拉、伊丽莎白、费利佩、菲利普，看起来是翻译问题，往下挖却是婚姻、继承和权力网络。",
-            style: "curious",
-            source_capture_ids: ["cap_1", "cap_3", "cap_5"],
-            publish_status: "draft",
-          },
-          {
-            id: "tweet_seed_2",
-            spark_card_id: "spark_prado_power",
-            text: "普拉多博物馆里的很多画，不只是艺术史，也是西班牙王室把自己讲成历史主角的方式。",
-            style: "plain",
-            source_capture_ids: ["cap_2"],
-            publish_status: "draft",
-          },
-          {
-            id: "tweet_seed_3",
-            spark_card_id: "spark_columbus_isabella",
-            text: "伊莎贝拉女王和哥伦布这条线，把王室八卦突然接到了大航海时代。",
-            style: "surprise",
-            source_capture_ids: ["cap_6"],
-            publish_status: "draft",
-          },
-        ],
-      },
+      "提交短表达种子。不能直接下事实结论，要保留探索感。",
+      Type.Object({
+        tweet_seeds: Type.Array(
+          Type.Object({
+            id: Type.String(),
+            spark_card_id: Type.String(),
+            text: Type.String({ minLength: 20 }),
+            style: Type.String(),
+            source_capture_ids: sourceIds,
+            publish_status: Type.String(),
+          }),
+          { minItems: 3 },
+        ),
+      }),
     ),
-    tool(
+    submitTool(
       "propose_exploration_threads",
       "Propose exploration threads",
-      "Offer research lines without treating notes as facts.",
-      Type.Object({ maxThreads: Type.Number() }),
-      {
-        threads: [
-          {
-            id: "thread_genealogy",
-            title: "欧洲王室亲缘和译名线",
-            question: "这些相似名字背后到底是血缘、婚姻还是翻译？",
-            source_capture_ids: ["cap_1", "cap_3", "cap_5"],
-          },
-          {
-            id: "thread_isabella_columbus",
-            title: "伊莎贝拉女王和哥伦布线",
-            question: "伊莎贝拉赞助哥伦布这件事如何改变西班牙王权叙事？",
-            source_capture_ids: ["cap_4", "cap_6"],
-          },
-        ],
-        recommended_thread_id: "thread_isabella_columbus",
-      },
+      "提交 2-3 条探索主线，并说明推荐哪条先走。",
+      Type.Object({
+        threads: Type.Array(
+          Type.Object({
+            id: Type.String(),
+            title: Type.String({ minLength: 6 }),
+            question: Type.String({ minLength: 12 }),
+            reason: Type.String({ minLength: 16 }),
+            source_capture_ids: sourceIds,
+          }),
+          { minItems: 2 },
+        ),
+        recommended_thread_id: Type.String(),
+      }),
     ),
-    tool(
+    submitTool(
       "synthesize_exploration_board",
       "Synthesize exploration board",
-      "Create a lightweight board for the recommended exploration thread.",
-      Type.Object({ threadId: Type.String() }),
-      {
-        exploration_board: {
-          id: "board_isabella_columbus",
-          recommended_thread_id: "thread_isabella_columbus",
-          columns: [
-            { title: "已有线索", items: ["伊莎贝拉女王", "哥伦布", "西班牙王室"] },
-            { title: "需要确认", items: ["具体赞助关系", "与普拉多画作的关联"] },
-          ],
-        },
-      },
+      "提交探索面板，用来解释当前主线有哪些线索、假设和风险。",
+      Type.Object({
+        exploration_board: Type.Object({
+          id: Type.String(),
+          recommended_thread_id: Type.String(),
+          columns: Type.Array(
+            Type.Object({
+              title: Type.String(),
+              items: Type.Array(Type.String({ minLength: 6 }), { minItems: 1 }),
+            }),
+            { minItems: 3 },
+          ),
+        }),
+      }),
     ),
-    tool(
-      "generate_knowledge_map",
-      "Generate knowledge map",
-      "Create KnowledgeMap v1 using weak/medium confidence only.",
-      Type.Object({ threadId: Type.String(), version: Type.Number() }),
-      {
-        map: {
-          id: "map_isabella_columbus_v1",
-          version: 1,
-          nodes: [
-            { id: "root", label: "伊莎贝拉女王和哥伦布为什么能串起这些收藏？", confidence: "weak" },
-            { id: "node_royal_power", label: "王室赞助与权力叙事", confidence: "weak" },
-            { id: "node_art", label: "普拉多画作作为王室故事入口", confidence: "weak" },
-          ],
-        },
-      },
+    submitTool(
+      "create_knowledge_map",
+      "Create knowledge map",
+      "提交最终知识图。禁止模板话术；必须体现你基于收藏做出的非显而易见分析。",
+      Type.Object({
+        map: Type.Object({
+          id: Type.String(),
+          version: Type.Literal(1),
+          title: Type.String({ minLength: 8 }),
+          core_question: Type.String({ minLength: 20 }),
+          thesis: Type.String({ minLength: 30 }),
+          mainline: Type.Array(Type.String({ minLength: 18 }), { minItems: 3 }),
+          non_obvious_insights: Type.Array(
+            Type.Object({
+              claim: Type.String({ minLength: 18 }),
+              why_interesting: Type.String({ minLength: 24 }),
+              source_capture_ids: sourceIds,
+            }),
+            { minItems: 3 },
+          ),
+          known_unknowns: Type.Array(Type.String({ minLength: 8 }), { minItems: 2 }),
+          evidence_gaps: Type.Array(evidenceGap, { minItems: 2 }),
+        }),
+      }),
     ),
-    tool(
+    submitTool(
       "mark_evidence_gap",
       "Mark evidence gap",
-      "Mark gaps that need external evidence before becoming claims.",
-      Type.Object({ mapId: Type.String() }),
-      {
-        gaps: [
-          {
-            id: "gap_isabella_columbus",
-            description: "需要确认伊莎贝拉女王与哥伦布航行资助之间的可靠史料。",
-            search_goal: "找到权威来源说明伊莎贝拉女王和哥伦布的关系。",
-            stop_condition: "至少一个博物馆、百科或学术机构来源。",
-          },
-        ],
-      },
+      "提交需要补证据的缺口。每个缺口必须有可直接搜索的 query。",
+      Type.Object({
+        gaps: Type.Array(evidenceGap, { minItems: 1 }),
+      }),
     ),
-    tool(
+    submitTool(
       "search_evidence",
       "Search evidence",
-      "Request external evidence for one EvidenceGap. Python guardrail may block this tool.",
+      "请求外部搜索。Python 护栏会在未确认时阻止该工具。",
       Type.Object({
         gap_id: Type.String(),
-        query: Type.String(),
+        query: Type.String({ minLength: 8 }),
         max_results: Type.Number(),
       }),
-      {
-        evidence: [
-          {
-            id: "ev_real_search_requested",
-            gap_id: "gap_isabella_columbus",
-            source_title: "Real search requested",
-            source_uri: "about:real-search-adapter-required",
-            summary: "Python side must replace this with real search adapter results after confirmation.",
-            strength: "weak",
-            status: "candidate",
-          },
-        ],
-      },
     ),
-    tool(
+    submitTool(
       "attach_evidence",
       "Attach evidence",
-      "Attach confirmed evidence to a map node.",
-      Type.Object({ evidenceId: Type.String(), mapId: Type.String() }),
-      {
-        evidence: {
-          id: "ev_real_search_requested",
-          source_type: "web",
-          source_url: "about:real-search-adapter-required",
-          title: "Real search requested",
-          summary: "等待用户确认搜索后替换为真实证据。",
-          supports_node_id: "node_royal_power",
-          evidence_type: "candidate",
-          strength: "weak",
-          status: "weak_related",
-        },
-        map: {
-          id: "map_isabella_columbus_v1",
-          version: 1,
-          nodes: [{ id: "node_royal_power", confidence: "weak" }],
-        },
-      },
+      "提交要附加到地图上的候选证据。没有真实搜索前只能标 weak_related。",
+      Type.Object({
+        evidence: Type.Object({
+          id: Type.String(),
+          source_type: Type.String(),
+          source_url: Type.String(),
+          title: Type.String(),
+          summary: Type.String({ minLength: 12 }),
+          supports_node_id: Type.String(),
+          evidence_type: Type.String(),
+          strength: Type.Union([Type.Literal("weak"), Type.Literal("medium"), Type.Literal("strong")]),
+          status: Type.String(),
+        }),
+        map: Type.Object({
+          id: Type.String(),
+          version: Type.Literal(1),
+          nodes: Type.Array(Type.Object({ id: Type.String(), confidence: Type.String() })),
+        }),
+      }),
     ),
-    tool(
+    submitTool(
       "draft_expression_variants",
       "Draft expression variants",
-      "Draft optional expression variants for the user.",
-      Type.Object({ seedIds: Type.Array(Type.String()) }),
-      {
-        drafts: [
-          {
-            id: "draft_1",
-            text: "我以为只是两个女王名字像，结果越看越像一张欧洲王室和大航海时代的关系网。",
-            source_capture_ids: ["cap_1", "cap_5", "cap_6"],
-          },
-        ],
-      },
+      "提交可选表达草稿，帮助用户把探索结果变成可发内容。",
+      Type.Object({
+        drafts: Type.Array(
+          Type.Object({
+            id: Type.String(),
+            text: Type.String({ minLength: 20 }),
+            source_capture_ids: sourceIds,
+          }),
+          { minItems: 1 },
+        ),
+      }),
     ),
   ];
 }

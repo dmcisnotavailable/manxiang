@@ -48,14 +48,15 @@ class WorkbenchService:
         self.discover_topics()
         return self.state()
 
-    def create_surprise_run(self, run_bridge: bool = False) -> dict[str, Any]:
+    def create_surprise_run(self, run_bridge: bool = False, bridge=None) -> dict[str, Any]:
         captures = self.pipeline.store.list_captures()
         if not captures:
             raise ValueError("captures are required before surprise run")
         run = create_run(self.pipeline.store, [capture.id for capture in captures], clock=self.clock)
         self.surprise_run = _to_jsonable(run)
         if run_bridge:
-            self.surprise_result = run_surprise_with_bridge(self.pipeline.store, run, captures)
+            self.surprise_result = run_surprise_with_bridge(self.pipeline.store, run, captures, bridge=bridge)
+            self._sync_agent_outputs(run.id)
         return self.state()
 
     def confirm_run_search(self, run_id: str, gap_id: str, max_search_queries: int = 3) -> dict[str, Any]:
@@ -121,6 +122,7 @@ class WorkbenchService:
             "task": self.task,
             "linePlan": self.line_plan,
             "map": self.knowledge_map,
+            "agentMap": self.agent_map,
             "draftType": self.draft_type,
             "draft": self.draft,
             "parking": self.parking,
@@ -136,6 +138,7 @@ class WorkbenchService:
         self.task: dict[str, Any] | None = None
         self.line_plan: dict[str, Any] | None = None
         self.knowledge_map: dict[str, Any] | None = None
+        self.agent_map: dict[str, Any] | None = None
         self.draft_type = "outline"
         self.draft = ""
         self.parking = ["底层模型架构", "语音克隆技术史"]
@@ -152,10 +155,18 @@ class WorkbenchService:
         self.task = None
         self.line_plan = None
         self.knowledge_map = None
+        self.agent_map = None
         self.draft = ""
         self.draft_type = "outline"
         self.surprise_run = None
         self.surprise_result = None
+
+    def _sync_agent_outputs(self, run_id: str) -> None:
+        maps = [event.payload for event in self.pipeline.store.replay_events(run_id) if event.type == "map.created"]
+        if not maps:
+            return
+        self.agent_map = maps[-1]
+        self.knowledge_map = _agent_map_view(self.agent_map)
 
 
 def _to_jsonable(value: Any) -> Any:
@@ -219,6 +230,89 @@ def _map_view(knowledge_map: KnowledgeMap) -> dict[str, Any]:
         "nextAction": knowledge_map.text_view.next_action,
         "recommendationReason": knowledge_map.text_view.recommendation_reason,
         "tree": _tree_view(root),
+    }
+
+
+def _agent_map_view(agent_map: dict[str, Any]) -> dict[str, Any]:
+    insights = agent_map.get("non_obvious_insights", [])
+    gaps = agent_map.get("evidence_gaps", [])
+    mainline = agent_map.get("mainline", [])
+    known_unknowns = agent_map.get("known_unknowns", [])
+    title = agent_map.get("title", "Agent 分析知识图")
+    core_question = agent_map.get("core_question", "")
+    thesis = agent_map.get("thesis", "")
+    return {
+        "taskId": agent_map.get("id", "agent_map"),
+        "version": agent_map.get("version", 1),
+        "title": title,
+        "coreQuestion": core_question,
+        "mainline": mainline,
+        "concepts": [item.get("claim", "") for item in insights],
+        "evidence": [item.get("why_interesting", "") for item in insights],
+        "gaps": [gap.get("description", "") for gap in gaps],
+        "nextAction": gaps[0].get("search_query", "选择一个证据缺口开始验证") if gaps else "确认 Agent 分析方向",
+        "recommendationReason": thesis,
+        "tree": {
+            "id": agent_map.get("id", "agent_map"),
+            "label": title,
+            "kind": "root",
+            "children": [
+                {"id": "core_question", "label": core_question, "kind": "core_question", "children": []},
+                {
+                    "id": "mainline",
+                    "label": "Agent 推荐主线",
+                    "kind": "mainline",
+                    "children": [
+                        {"id": f"mainline_{index + 1}", "label": item, "kind": "mainline", "children": []}
+                        for index, item in enumerate(mainline)
+                    ],
+                },
+                {
+                    "id": "insights",
+                    "label": "非显而易见洞察",
+                    "kind": "concept",
+                    "children": [
+                        {
+                            "id": f"insight_{index + 1}",
+                            "label": item.get("claim", ""),
+                            "kind": "concept",
+                            "children": [
+                                {
+                                    "id": f"insight_{index + 1}_why",
+                                    "label": item.get("why_interesting", ""),
+                                    "kind": "evidence",
+                                    "children": [],
+                                }
+                            ],
+                        }
+                        for index, item in enumerate(insights)
+                    ],
+                },
+                {
+                    "id": "known_unknowns",
+                    "label": "待澄清问题",
+                    "kind": "evidence_gap",
+                    "children": [
+                        {"id": f"unknown_{index + 1}", "label": item, "kind": "evidence_gap", "children": []}
+                        for index, item in enumerate(known_unknowns)
+                    ],
+                },
+                {
+                    "id": "evidence_gaps",
+                    "label": "可执行证据缺口",
+                    "kind": "evidence_gap",
+                    "children": [
+                        {
+                            "id": gap.get("id", f"gap_{index + 1}"),
+                            "label": f"{gap.get('description', '')}｜检索：{gap.get('search_query', '')}",
+                            "kind": "evidence_gap",
+                            "children": [],
+                        }
+                        for index, gap in enumerate(gaps)
+                    ],
+                },
+            ],
+        },
     }
 
 

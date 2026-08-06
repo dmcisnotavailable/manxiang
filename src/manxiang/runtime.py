@@ -25,14 +25,18 @@ class PiAgentBridge:
         return self.runner(payload)
 
     def _run_subprocess(self, payload: dict) -> dict:
-        completed = subprocess.run(
-            ["npm", "run", "piagent:run", "--silent"],
-            input=json.dumps(payload, ensure_ascii=False),
-            text=True,
-            capture_output=True,
-            cwd=PROJECT_ROOT,
-            check=True,
-        )
+        try:
+            completed = subprocess.run(
+                ["npm", "run", "piagent:run", "--silent"],
+                input=json.dumps(payload, ensure_ascii=False),
+                text=True,
+                capture_output=True,
+                cwd=PROJECT_ROOT,
+                check=True,
+            )
+        except subprocess.CalledProcessError as error:
+            detail = (error.stderr or error.stdout or str(error)).strip()
+            raise RuntimeError(f"Pi Agent bridge failed: {detail}") from error
         return json.loads(completed.stdout)
 
     def _capture_payload(self, capture: CaptureItem) -> dict:

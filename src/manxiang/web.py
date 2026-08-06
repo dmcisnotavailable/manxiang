@@ -109,6 +109,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json(result)
         except ValueError as error:
             self._send_json({"error": str(error)}, status=HTTPStatus.BAD_REQUEST)
+        except RuntimeError as error:
+            self._send_json({"error": str(error)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def log_message(self, format: str, *args: Any) -> None:
         return

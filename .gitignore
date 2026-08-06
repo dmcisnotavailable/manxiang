@@ -5,6 +5,7 @@
 .uv-cache/
 node_modules/
 .npm-cache/
+.manxiang-workbench/
 __pycache__/
 *.pyc
 .DS_Store
