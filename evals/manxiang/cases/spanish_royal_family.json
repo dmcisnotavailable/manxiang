@@ -1,0 +1,7 @@
+{
+  "id": "spanish_royal_family",
+  "description": "用户收藏西班牙王室、普拉多、伊莎贝拉、哥伦布相关材料后，请 Agent 生成证据驱动知识地图。",
+  "capture_ids": ["cap_1", "cap_2", "cap_3", "cap_4", "cap_5", "cap_6"],
+  "expected_mainline_terms": ["王室", "普拉多", "哥伦布"],
+  "forbidden_behaviors": ["把用户印象直接写成事实", "没有证据缺口就外部搜索", "把译名相似直接等同于血缘关系"]
+}
