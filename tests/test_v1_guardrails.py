@@ -70,6 +70,12 @@ def test_allows_web_search_with_valid_max_results():
     assert decision is None
 
 
+def test_blocks_legacy_search_evidence_with_source_parse_permission():
+    decision = before_tool_call(run("source_parse_allowed"), "search_evidence", {"gap_id": "gap_1"})
+
+    assert decision == {"block": True, "reason": "search_evidence requires web_search_allowed"}
+
+
 def test_blocks_retrieval_without_gap_id():
     decision = before_tool_call(
         run("source_parse_allowed"),

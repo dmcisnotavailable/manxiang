@@ -15,7 +15,7 @@ def make_run(autonomy_level: str = "inbox_only") -> AgentRun:
 def test_blocks_search_evidence_in_inbox_only():
     decision = before_tool_call(make_run(), "search_evidence", {"gap_id": "gap_1"})
 
-    assert decision == {"block": True, "reason": "search_evidence requires user confirmation"}
+    assert decision == {"block": True, "reason": "search_evidence requires web_search_allowed"}
 
 
 def test_blocks_search_without_gap_id():

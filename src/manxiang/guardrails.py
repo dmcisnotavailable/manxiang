@@ -56,8 +56,8 @@ def _map_nodes(args: dict) -> tuple[list[dict], dict | None]:
 
 def before_tool_call(run: AgentRun, tool_name: str, args: dict) -> dict | None:
     if tool_name == "search_evidence":
-        if run.autonomy_level == "inbox_only":
-            return {"block": True, "reason": "search_evidence requires user confirmation"}
+        if run.autonomy_level != "web_search_allowed":
+            return {"block": True, "reason": "search_evidence requires web_search_allowed"}
         if not args.get("gap_id"):
             return {"block": True, "reason": "search_evidence requires gap_id"}
 
