@@ -1,0 +1,24 @@
+tests/test_v1_map_versions.py
+  s_3ba2f26277c9bb::t_b12e5fd3d61848 1-2,8-11,21-30,52-147,158,169-215
+src/manxiang/map_versions.py
+  s_3ba2f26277c9bb::t_e1b02c4f02cbb3 23-25,58-59,62-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "5ec15a81dd5bd34c46af36603023a0a19c41aaa5",
+  "prompts": {},
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 143,
+      "total_deletions": 15,
+      "accepted_lines": 143
+    }
+  }
+}
