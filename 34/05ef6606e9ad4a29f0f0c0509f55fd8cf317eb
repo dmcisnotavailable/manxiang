@@ -1,0 +1,31 @@
+src/manxiang/guardrails.py
+  s_3ba2f26277c9bb::t_29a35728fd2ecd 4-28,31-35,37,50,52-54,60,64,66,70-74
+tests/test_v1_guardrails.py
+  s_3ba2f26277c9bb::t_079c9d565a91b4 40-44,50-54,60-64
+  s_3ba2f26277c9bb::t_7308b63e77a06d 25-38,49,55-59,65-68,79-111,130-136
+  h_f57af7de2b9509 137-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "3405ef6606e9ad4a29f0f0c0509f55fd8cf317eb",
+  "prompts": {},
+  "humans": {
+    "h_f57af7de2b9509": {
+      "author": "dmcisnotavailable <1503279384@qq.com>"
+    }
+  },
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 96,
+      "total_deletions": 16,
+      "accepted_lines": 94
+    }
+  }
+}
