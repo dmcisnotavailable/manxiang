@@ -1,0 +1,23 @@
+docs/superpowers/specs/2026-08-06-manxiang-v1-agent-upgrade-design.md
+  s_3ba2f26277c9bb::t_8a1f293c82ddbe 1-484
+docs/superpowers/plans/2026-08-06-manxiang-v1-agent-upgrade-implementation.md
+  s_3ba2f26277c9bb::t_8a1f293c82ddbe 1-2117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "0c33fb1059118a0f52cfd5d630c682e7ff4658fc",
+  "prompts": {},
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 2003,
+      "accepted_lines": 2003
+    }
+  }
+}
