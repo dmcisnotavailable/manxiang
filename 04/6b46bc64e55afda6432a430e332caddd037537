@@ -1,7 +1,7 @@
-evals/manxiang/run_eval.py
-  s_3ba2f26277c9bb::t_cab05300fb20a8 19
 tests/test_v1_evals.py
   s_3ba2f26277c9bb::t_ba3f0520f7be2f 52-64,76-99,115
+evals/manxiang/run_eval.py
+  s_3ba2f26277c9bb::t_cab05300fb20a8 19
 src/manxiang/evals.py
   s_3ba2f26277c9bb::t_cab05300fb20a8 13-24,29,35
 ---
