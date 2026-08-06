@@ -1,0 +1,21 @@
+tests/test_v1_map_versions.py
+  s_3ba2f26277c9bb::t_81590343940177 63-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "f41d688edd8164e36e3bb036e503a8aa9fa92219",
+  "prompts": {},
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 2,
+      "accepted_lines": 2
+    }
+  }
+}
