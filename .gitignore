@@ -6,6 +6,7 @@
 node_modules/
 .npm-cache/
 .manxiang-workbench/
+/evals/manxiang/reports/*.latest.json
 __pycache__/
 *.pyc
 .DS_Store
