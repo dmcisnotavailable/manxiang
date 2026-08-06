@@ -1,7 +1,7 @@
-tests/test_v1_guardrails.py
-  s_3ba2f26277c9bb::t_2a6ac4ec506487 1-38
 src/manxiang/guardrails.py
   s_3ba2f26277c9bb::t_bd5c4b345894ff 10-35,38,41
+tests/test_v1_guardrails.py
+  s_3ba2f26277c9bb::t_2a6ac4ec506487 1-38
 ---
 {
   "schema_version": "authorship/3.0.0",
