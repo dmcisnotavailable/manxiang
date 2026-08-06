@@ -16,7 +16,7 @@ from manxiang.evals import score_agent_map
 CASE_PATH = ROOT / "evals" / "manxiang" / "cases" / "spanish_royal_family.json"
 RUBRIC_PATH = ROOT / "evals" / "manxiang" / "rubrics" / "research_map.json"
 REPORT_DIR = ROOT / "evals" / "manxiang" / "reports"
-NOT_SCORED = ["stage_compliance", "over_search_penalty"]
+NOT_SCORED = ["over_search_penalty"]
 
 
 def load_json(path: Path) -> dict[str, object]:

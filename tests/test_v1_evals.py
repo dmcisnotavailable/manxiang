@@ -49,6 +49,19 @@ def test_score_agent_map_tolerates_bad_shapes_and_requires_string_list_mainline(
     assert score["source_grounding"] == 1.0
     assert score["evidence_precision"] == 1.0
     assert score["map_coherence"] == 0.5
+    assert score["stage_compliance"] < 1.0
+    failures = run_eval.evaluate_thresholds(
+        score,
+        {
+            "stage_compliance": 1.0,
+            "source_grounding": 0.8,
+            "evidence_precision": 0.8,
+            "map_coherence": 0.8,
+            "hallucination_penalty": 0.2,
+        },
+        ["over_search_penalty"],
+    )
+    assert {failure["field"] for failure in failures} == {"stage_compliance", "map_coherence"}
 
     empty_score = score_agent_map(
         {
@@ -60,6 +73,30 @@ def test_score_agent_map_tolerates_bad_shapes_and_requires_string_list_mainline(
 
     assert empty_score["source_grounding"] == 1.0
     assert empty_score["evidence_precision"] == 0.5
+    assert empty_score["stage_compliance"] < 1.0
+
+
+def test_evaluate_thresholds_checks_scores_and_penalties_in_opposite_directions():
+    failures = run_eval.evaluate_thresholds(
+        {
+            "source_grounding": 0.7,
+            "map_coherence": 1.0,
+            "hallucination_penalty": 0.3,
+            "over_search_penalty": 1.0,
+        },
+        {
+            "source_grounding": 0.8,
+            "map_coherence": 0.8,
+            "hallucination_penalty": 0.2,
+            "over_search_penalty": 0.2,
+        },
+        ["over_search_penalty"],
+    )
+
+    assert failures == [
+        {"field": "source_grounding", "score": 0.7, "expected": 0.8, "operator": ">="},
+        {"field": "hallucination_penalty", "score": 0.3, "expected": 0.2, "operator": "<="},
+    ]
 
 
 def test_eval_runner_writes_rubric_based_report(tmp_path, monkeypatch):
@@ -75,4 +112,4 @@ def test_eval_runner_writes_rubric_based_report(tmp_path, monkeypatch):
     assert report["rubric"]["source_grounding"] == 0.8
     assert report["passed"] is True
     assert report["failures"] == []
-    assert report["not_scored"] == ["stage_compliance", "over_search_penalty"]
+    assert report["not_scored"] == ["over_search_penalty"]
