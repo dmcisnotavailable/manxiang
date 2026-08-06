@@ -133,12 +133,70 @@ def test_blocked_tool_completed_is_ignored_and_run_waits_for_user(tmp_path):
     event_types = [event.type for event in events]
     assert event_types == ["tool.blocked", "user.input.required"]
     assert events[0].payload["tool_name"] == "create_knowledge_map"
-    assert events[1].payload == {"tool_name": "create_knowledge_map", "reason": "fact nodes require source_refs"}
+    assert events[1].payload == {"tool_name": "create_knowledge_map", "reason": "fact nodes require valid source_refs"}
 
     stored_run = json.loads((tmp_path / "runs.json").read_text(encoding="utf-8"))[0]
     assert stored_run["status"] == "waiting_user"
     assert stored_run["blocked_tool_count"] == 1
     assert stored_run["updated_at"] == "2026-08-06T10:05:00+08:00"
+
+
+def test_v1_request_tools_completed_append_replayable_events(tmp_path):
+    store = JsonStore(tmp_path)
+
+    class FakeBridge:
+        def run(self, _run, _captures):
+            events = []
+            for tool_name, payload in [
+                (
+                    "create_research_contract",
+                    {
+                        "contract": {
+                            "task_id": "task_1",
+                            "title": "伊莎贝拉研究契约",
+                            "goal": "厘清伊莎贝拉资助哥伦布的证据链",
+                            "allowed_scope": ["收藏文本"],
+                            "blocked_scope": ["无证据扩写"],
+                            "completion_definition": "形成带证据引用的修订地图",
+                        }
+                    },
+                ),
+                (
+                    "request_source_parse",
+                    {"capture_id": "cap_1", "reason": "需要解析原文来补足 gap_1", "gap_id": "gap_1"},
+                ),
+                (
+                    "retrieve_evidence_chunks",
+                    {"gap_id": "gap_1", "query": "伊莎贝拉 哥伦布", "limit": 5},
+                ),
+                (
+                    "request_web_search",
+                    {
+                        "gap_id": "gap_1",
+                        "query": "Isabella Columbus patronage",
+                        "search_goal": "找到伊莎贝拉资助哥伦布的可靠证据",
+                        "stop_condition": "找到两个可靠来源后停止",
+                        "max_results": 3,
+                    },
+                ),
+            ]:
+                events.append({"type": "tool.started", "tool_name": tool_name, "payload": payload})
+                events.append({"type": "tool.completed", "tool_name": tool_name, "payload": payload})
+            return {"events": events}
+
+    run_surprise_with_bridge(
+        store,
+        make_run(autonomy_level="web_search_allowed"),
+        [],
+        bridge=FakeBridge(),
+        clock=lambda: "2026-08-06T10:05:00+08:00",
+    )
+
+    event_types = [event.type for event in store.replay_events("run_1")]
+    assert "research.contract.created" in event_types
+    assert "source.parse.requested" in event_types
+    assert "evidence.chunks.retrieve.requested" in event_types
+    assert "web.search.requested" in event_types
 
 
 @pytest.mark.parametrize("status", ["exploring", "completed", "failed"])

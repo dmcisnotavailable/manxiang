@@ -82,6 +82,22 @@ def reduce_tool_result(store: JsonStore, run_id: str, tool_name: str, payload: d
             store.append_event(run_id, "expression.draft.created", draft)
         return
 
+    if tool_name == "create_research_contract":
+        store.append_event(run_id, "research.contract.created", payload["contract"])
+        return
+
+    if tool_name == "request_source_parse":
+        store.append_event(run_id, "source.parse.requested", payload)
+        return
+
+    if tool_name == "retrieve_evidence_chunks":
+        store.append_event(run_id, "evidence.chunks.retrieve.requested", payload)
+        return
+
+    if tool_name == "request_web_search":
+        store.append_event(run_id, "web.search.requested", payload)
+        return
+
     if tool_name == "revise_knowledge_map":
         map_payload = _revision_map_payload(payload)
         _validate_source_backed_facts(map_payload)
@@ -97,6 +113,23 @@ def _revision_map_payload(payload: dict) -> dict:
     return payload
 
 
+def _has_text(value: object) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _has_valid_source_refs(value: object) -> bool:
+    if not isinstance(value, list) or not value:
+        return False
+
+    for source_ref in value:
+        if not isinstance(source_ref, dict):
+            return False
+        if not all(_has_text(source_ref.get(field)) for field in ("artifact_id", "chunk_id", "quote", "anchor")):
+            return False
+
+    return True
+
+
 def _validate_source_backed_facts(map_payload: dict) -> None:
     if not isinstance(map_payload, dict):
         raise ValueError("map payload must be an object")
@@ -108,10 +141,8 @@ def _validate_source_backed_facts(map_payload: dict) -> None:
     for node in nodes:
         if not isinstance(node, dict):
             raise ValueError("map nodes must be objects")
-        if node.get("confidence") == "fact":
-            source_refs = node.get("source_refs")
-            if not isinstance(source_refs, list) or not source_refs:
-                raise ValueError("fact nodes require source_refs")
+        if node.get("confidence") == "fact" and not _has_valid_source_refs(node.get("source_refs")):
+            raise ValueError("fact nodes require valid source_refs")
 
 
 def _validate_agent_map(map_payload: dict) -> None:

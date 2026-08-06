@@ -297,7 +297,7 @@ export function manxiangTools(): AgentTool[] {
       Type.Object({
         gap_id: Type.String(),
         query: Type.String({ minLength: 4 }),
-        limit: Type.Number(),
+        limit: Type.Integer({ minimum: 1, maximum: 10 }),
       }),
     ),
     submitTool(
@@ -309,7 +309,7 @@ export function manxiangTools(): AgentTool[] {
         query: Type.String({ minLength: 8 }),
         search_goal: Type.String({ minLength: 12 }),
         stop_condition: Type.String({ minLength: 12 }),
-        max_results: Type.Number(),
+        max_results: Type.Integer({ minimum: 1, maximum: 10 }),
       }),
     ),
     submitTool(

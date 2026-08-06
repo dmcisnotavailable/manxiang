@@ -5,6 +5,23 @@ def _has_text(value: object) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
 
+def _is_int_between(value: object, minimum: int, maximum: int) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and minimum <= value <= maximum
+
+
+def _has_valid_source_refs(value: object) -> bool:
+    if not isinstance(value, list) or not value:
+        return False
+
+    for source_ref in value:
+        if not isinstance(source_ref, dict):
+            return False
+        if not all(_has_text(source_ref.get(field)) for field in ("artifact_id", "chunk_id", "quote", "anchor")):
+            return False
+
+    return True
+
+
 def _collect_nodes(value: object) -> tuple[list[dict], dict | None]:
     if not isinstance(value, list):
         return [], {"block": True, "reason": "map nodes must be a list"}
@@ -53,6 +70,8 @@ def before_tool_call(run: AgentRun, tool_name: str, args: dict) -> dict | None:
             return {"block": True, "reason": "request_web_search requires search_goal"}
         if not _has_text(args.get("stop_condition")):
             return {"block": True, "reason": "request_web_search requires stop_condition"}
+        if not _is_int_between(args.get("max_results"), 1, 10):
+            return {"block": True, "reason": "request_web_search requires max_results between 1 and 10"}
 
     if tool_name == "request_source_parse":
         if run.autonomy_level == "inbox_only":
@@ -65,6 +84,8 @@ def before_tool_call(run: AgentRun, tool_name: str, args: dict) -> dict | None:
             return {"block": True, "reason": "retrieve_evidence_chunks requires gap_id"}
         if not _has_text(args.get("query")):
             return {"block": True, "reason": "retrieve_evidence_chunks requires query"}
+        if not _is_int_between(args.get("limit"), 1, 10):
+            return {"block": True, "reason": "retrieve_evidence_chunks requires limit between 1 and 10"}
 
     if tool_name in {"revise_knowledge_map", "create_knowledge_map"}:
         nodes, decision = _map_nodes(args)
@@ -72,8 +93,8 @@ def before_tool_call(run: AgentRun, tool_name: str, args: dict) -> dict | None:
             return decision
 
         for node in nodes:
-            if node.get("confidence") == "fact" and not node.get("source_refs"):
-                return {"block": True, "reason": "fact nodes require source_refs"}
+            if node.get("confidence") == "fact" and not _has_valid_source_refs(node.get("source_refs")):
+                return {"block": True, "reason": "fact nodes require valid source_refs"}
 
     if tool_name == "publish_tweet":
         return {"block": True, "reason": "publish_tweet is not available in V0b"}
