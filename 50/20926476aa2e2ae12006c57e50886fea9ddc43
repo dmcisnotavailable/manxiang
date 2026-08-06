@@ -1,0 +1,31 @@
+src/manxiang/web.py
+  s_3ba2f26277c9bb::t_cb52f147fd5282 53-55,94-95
+src/manxiang/workbench.py
+  s_3ba2f26277c9bb::t_752c39bfa89508 12,143-166
+  h_f57af7de2b9509 167-168
+tests/test_v1_workbench.py
+  s_3ba2f26277c9bb::t_9953989378b822 1-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "5020926476aa2e2ae12006c57e50886fea9ddc43",
+  "prompts": {},
+  "humans": {
+    "h_f57af7de2b9509": {
+      "author": "dmcisnotavailable <1503279384@qq.com>"
+    }
+  },
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 45,
+      "accepted_lines": 45
+    }
+  }
+}
