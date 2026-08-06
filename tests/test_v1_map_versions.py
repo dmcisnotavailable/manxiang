@@ -60,3 +60,5 @@ def test_diff_reports_changed_confidence_and_added_source_ref():
     assert diff["changed_nodes"][0]["id"] == "node_1"
     assert diff["changed_nodes"][0]["before_confidence"] == "hypothesis"
     assert diff["changed_nodes"][0]["after_confidence"] == "fact"
+    assert diff["changed_nodes"][0]["before_source_ref_count"] == 0
+    assert diff["changed_nodes"][0]["after_source_ref_count"] == 1
