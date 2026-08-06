@@ -1,8 +1,8 @@
-src/manxiang/retrieval.py
-  s_3ba2f26277c9bb::t_0d18291f08cb32 37
 tests/test_v1_retrieval.py
   s_3ba2f26277c9bb::t_bfeecfdc570bcc 18-27,42-49
   h_f57af7de2b9509 50-51
+src/manxiang/retrieval.py
+  s_3ba2f26277c9bb::t_0d18291f08cb32 37
 ---
 {
   "schema_version": "authorship/3.0.0",
