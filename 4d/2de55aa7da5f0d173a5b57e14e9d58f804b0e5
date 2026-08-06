@@ -1,0 +1,21 @@
+tests/test_v1_sqlite_store.py
+  s_3ba2f26277c9bb::t_0ef79c678b419e 52-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "4d2de55aa7da5f0d173a5b57e14e9d58f804b0e5",
+  "prompts": {},
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 6,
+      "accepted_lines": 6
+    }
+  }
+}
