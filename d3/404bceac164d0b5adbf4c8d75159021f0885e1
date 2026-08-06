@@ -1,0 +1,24 @@
+tests/test_v1_guardrails.py
+  s_3ba2f26277c9bb::t_6e03c597115164 39-58
+src/manxiang/guardrails.py
+  s_3ba2f26277c9bb::t_2367d92638b5ff 4-15,44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "d3404bceac164d0b5adbf4c8d75159021f0885e1",
+  "prompts": {},
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 23,
+      "total_deletions": 1,
+      "accepted_lines": 23
+    }
+  }
+}
