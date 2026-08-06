@@ -15,6 +15,16 @@ def chunk(chunk_id: str, text: str) -> SourceChunk:
     )
 
 
+def test_chunk_helper_creates_source_chunk():
+    source_chunk = chunk("chunk_1", "一段测试文本")
+
+    assert isinstance(source_chunk, SourceChunk)
+    assert source_chunk.id == "chunk_1"
+    assert source_chunk.artifact_id == "artifact_1"
+    assert source_chunk.end_offset == len("一段测试文本")
+    assert source_chunk.anchor == "text:chunk_1"
+
+
 def test_keyword_retriever_returns_ranked_chunks():
     retriever = KeywordRetriever()
     chunks = [
@@ -27,6 +37,16 @@ def test_keyword_retriever_returns_ranked_chunks():
 
     assert [result.chunk.id for result in results] == ["chunk_2", "chunk_1"]
     assert results[0].score > results[1].score
+
+
+def test_keyword_retriever_splits_common_punctuation():
+    retriever = KeywordRetriever()
+    chunks = [chunk("chunk_1", "伊莎贝拉一世资助哥伦布远航，也关联西班牙王室叙事。")]
+
+    results = retriever.retrieve("伊莎贝拉.哥伦布、王室", chunks, limit=3)
+
+    assert [result.chunk.id for result in results] == ["chunk_1"]
+    assert results[0].matched_terms == ["伊莎贝拉", "哥伦布", "王室"]
 
 
 def test_keyword_retriever_filters_zero_score_chunks():

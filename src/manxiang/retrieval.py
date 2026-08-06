@@ -34,7 +34,7 @@ class KeywordRetriever:
         )
 
     def _terms(self, query: str) -> list[str]:
-        raw_terms = re.split(r"[\s,，。！？?;；:：]+", query.strip())
+        raw_terms = re.split(r"[\s,，.。、!！?？;；:：]+", query.strip())
         terms: list[str] = []
         for term in raw_terms:
             clean = term.strip().lower()
