@@ -1,0 +1,22 @@
+README.md
+  s_3ba2f26277c9bb::t_7f7dd3956353ae 79-98,117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "e92660837c06048d448eb53d883f9f13387b0280",
+  "prompts": {},
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 60,
+      "total_deletions": 1,
+      "accepted_lines": 60
+    }
+  }
+}
