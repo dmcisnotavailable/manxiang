@@ -1,7 +1,7 @@
-tests/test_v1_source_parser.py
-  s_3ba2f26277c9bb::t_a54ed34b16607f 1-43
 src/manxiang/source_parser.py
   s_3ba2f26277c9bb::t_6476bedd6f63ec 1-88
+tests/test_v1_source_parser.py
+  s_3ba2f26277c9bb::t_a54ed34b16607f 1-43
 ---
 {
   "schema_version": "authorship/3.0.0",
