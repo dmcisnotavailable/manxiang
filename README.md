@@ -61,3 +61,41 @@ npm run piagent:typecheck
 cd manxiang
 uv run pytest
 ```
+
+## V1 Agent Upgrade
+
+V1 turns the V0b demo into an evidence-driven research Agent.
+
+Core additions:
+
+- SourceArtifact / SourceChunk / SourceRef for traceable evidence.
+- SQLiteStore for v1 repository experiments while JsonStore remains the V0b demo store.
+- Just-in-time source parsing, so captures stay lightweight until a research run needs evidence.
+- Keyword retrieval over SourceChunk as the first local RAG baseline.
+- KnowledgeMap versioning and diff.
+- Guardrails and reducers that reject fact nodes without source_refs.
+- Eval runner for rubric-based Agent quality checks.
+
+Run local deterministic tests:
+
+```bash
+uv run pytest -k 'not piagent_real_llm'
+```
+
+Run TypeScript bridge typecheck:
+
+```bash
+npm run piagent:typecheck
+```
+
+Run v1 eval sample:
+
+```bash
+uv run python evals/manxiang/run_eval.py
+```
+
+Run real LLM validation only when provider and model are configured:
+
+```bash
+MANXIANG_LLM_PROVIDER=your_provider MANXIANG_LLM_MODEL=your_model uv run pytest tests/test_v0b_piagent_real_llm.py
+```
