@@ -1,0 +1,46 @@
+src/manxiang/workbench.py
+  s_c9cd3c530a4290::t_fb5cc99bb2b6fb 51,58-59,125,141,158,164-170,236-315
+  h_f57af7de2b9509 316-318
+piagent/prompts.ts
+  s_c9cd3c530a4290::t_696d2b777dc748 21-22,24-25,36-37
+.gitignore
+  s_c9cd3c530a4290::t_f6ac5e9f87e904 8
+prototype/workbench.html
+  s_c9cd3c530a4290::t_3e452a774d6acb 436,461,555,595,597,601,603,650-651
+src/manxiang/web.py
+  s_c9cd3c530a4290::t_816e4272bb50ca 112-113
+tests/test_v0c_agent_analysis.py
+  s_c9cd3c530a4290::t_0c5fdce4ec89d4 1-119
+src/manxiang/reducers.py
+  s_c9cd3c530a4290::t_614ccab0b76a61 4-12,14,43-47,75-96
+tests/test_v0b_piagent_real_llm.py
+  s_c9cd3c530a4290::t_401b4866e9d9fe 6,37,40-41,43-53
+piagent/tools.ts
+  s_c9cd3c530a4290::t_f0f188c729171f 2,13,19,23-34,36,38,42,51-54,56-68,71,74-87,89-107,109,112-125,127,130-143,145,148-161,163-186,188,191-194,196,199,202,206,209-227,229,232-242
+src/manxiang/runtime.py
+  s_c9cd3c530a4290::t_02273d815a9634 28-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "96c4039d0d9f1e181eadc5a989ba8aed80e973ec",
+  "prompts": {},
+  "humans": {
+    "h_f57af7de2b9509": {
+      "author": "dmcisnotavailable <1503279384@qq.com>"
+    }
+  },
+  "sessions": {
+    "s_c9cd3c530a4290": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd1dd-3fa6-7ef0-a923-5e343131abd4",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 837,
+      "total_deletions": 243,
+      "accepted_lines": 837
+    }
+  }
+}
