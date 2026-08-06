@@ -39,6 +39,18 @@ def test_keyword_retriever_returns_ranked_chunks():
     assert results[0].score > results[1].score
 
 
+def test_keyword_retriever_coverage_dominates_density():
+    retriever = KeywordRetriever()
+    chunks = [
+        chunk("short_partial", "王室"),
+        chunk("long_full", "王室收藏的画作记录了很多宫廷故事，也呈现了历史里的权力结构。"),
+    ]
+
+    results = retriever.retrieve("王 室 画作", chunks, limit=2)
+
+    assert [result.chunk.id for result in results] == ["long_full", "short_partial"]
+
+
 def test_keyword_retriever_splits_common_punctuation():
     retriever = KeywordRetriever()
     chunks = [chunk("chunk_1", "伊莎贝拉一世资助哥伦布远航，也关联西班牙王室叙事。")]
@@ -46,7 +58,7 @@ def test_keyword_retriever_splits_common_punctuation():
     results = retriever.retrieve("伊莎贝拉.哥伦布、王室", chunks, limit=3)
 
     assert [result.chunk.id for result in results] == ["chunk_1"]
-    assert results[0].matched_terms == ["伊莎贝拉", "哥伦布", "王室"]
+    assert results[0].matched_terms == ("伊莎贝拉", "哥伦布", "王室")
 
 
 def test_keyword_retriever_filters_zero_score_chunks():
@@ -54,3 +66,43 @@ def test_keyword_retriever_filters_zero_score_chunks():
     chunks = [chunk("chunk_1", "完全无关的内容")]
 
     assert retriever.retrieve("伊莎贝拉 哥伦布", chunks, limit=3) == []
+
+
+def test_keyword_retriever_returns_empty_for_empty_query():
+    retriever = KeywordRetriever()
+    chunks = [chunk("chunk_1", "伊莎贝拉一世资助哥伦布远航。")]
+
+    assert retriever.retrieve(" ，。、 ", chunks, limit=3) == []
+
+
+def test_keyword_retriever_returns_empty_for_non_positive_limit():
+    retriever = KeywordRetriever()
+    chunks = [
+        chunk("chunk_1", "王室收藏"),
+        chunk("chunk_2", "王室画作"),
+    ]
+
+    assert retriever.retrieve("王室", chunks, limit=0) == []
+    assert retriever.retrieve("王室", chunks, limit=-1) == []
+
+
+def test_keyword_retriever_deduplicates_and_lowercases_query_terms():
+    retriever = KeywordRetriever()
+    chunks = [chunk("chunk_1", "Python 与 RAG 可以组合成检索系统。")]
+
+    results = retriever.retrieve("PYTHON python RAG rag", chunks, limit=3)
+
+    assert [result.chunk.id for result in results] == ["chunk_1"]
+    assert results[0].matched_terms == ("python", "rag")
+
+
+def test_keyword_retriever_preserves_input_order_for_score_ties():
+    retriever = KeywordRetriever()
+    chunks = [
+        chunk("chunk_1", "王室"),
+        chunk("chunk_2", "王室"),
+    ]
+
+    results = retriever.retrieve("王室", chunks, limit=2)
+
+    assert [result.chunk.id for result in results] == ["chunk_1", "chunk_2"]

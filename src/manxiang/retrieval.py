@@ -10,11 +10,13 @@ from manxiang.schema import SourceChunk
 class RetrievalResult:
     chunk: SourceChunk
     score: float
-    matched_terms: list[str]
+    matched_terms: tuple[str, ...]
 
 
 class KeywordRetriever:
     def retrieve(self, query: str, chunks: list[SourceChunk], limit: int = 5) -> list[RetrievalResult]:
+        if limit <= 0:
+            return []
         terms = self._terms(query)
         if not terms:
             return []
@@ -24,12 +26,12 @@ class KeywordRetriever:
 
     def _score_chunk(self, terms: list[str], chunk: SourceChunk) -> RetrievalResult:
         normalized = chunk.text.lower()
-        matched = [term for term in terms if term.lower() in normalized]
+        matched = tuple(term for term in terms if term.lower() in normalized)
         coverage = len(matched) / len(terms)
         density = len(matched) / max(1, len(chunk.text))
         return RetrievalResult(
             chunk=chunk,
-            score=round(coverage + density, 6),
+            score=round(coverage * 100 + density, 6),
             matched_terms=matched,
         )
 
