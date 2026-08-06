@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from contextlib import contextmanager
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
 
-from manxiang.events import make_event_id
-from manxiang.schema import CaptureItem, SourceArtifact, SourceChunk, StateEvent
+from manxiang.events import StateEvent, make_event_id
+from manxiang.schema import CaptureItem, SourceArtifact, SourceChunk
 
 
 class SQLiteStore:
@@ -39,18 +40,20 @@ class SQLiteStore:
 
     def append_event(self, run_id: str, event_type: str, payload: dict) -> StateEvent:
         with self._connect() as conn:
+            conn.execute("begin immediate")
             seq = self._next_seq(conn)
+            event_payload = self._to_jsonable(payload)
             event = StateEvent(
                 id=make_event_id(run_id, seq, event_type),
                 seq=seq,
                 run_id=run_id,
                 type=event_type,
-                payload=payload,
+                payload=event_payload,
                 created_at=self.clock(),
             )
             conn.execute(
                 "insert into events(id, seq, run_id, type, payload, created_at) values (?, ?, ?, ?, ?, ?)",
-                (event.id, event.seq, event.run_id, event.type, json.dumps(payload, ensure_ascii=False), event.created_at),
+                (event.id, event.seq, event.run_id, event.type, json.dumps(event_payload, ensure_ascii=False), event.created_at),
             )
             return event
 
@@ -78,11 +81,20 @@ class SQLiteStore:
             conn.execute("create table if not exists event_seq(id integer primary key check (id = 1), seq integer not null)")
             conn.execute("insert or ignore into event_seq(id, seq) values (1, 0)")
             conn.execute("create table if not exists events(id text primary key, seq integer not null, run_id text not null, type text not null, payload text not null, created_at text not null)")
+            conn.execute("create unique index if not exists idx_events_seq on events(seq)")
 
-    def _connect(self) -> sqlite3.Connection:
+    @contextmanager
+    def _connect(self) -> Iterator[sqlite3.Connection]:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
-        return conn
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
     def _upsert_json(self, table_name: str, item_id: str, item: Any) -> None:
         payload = json.dumps(self._to_jsonable(item), ensure_ascii=False)

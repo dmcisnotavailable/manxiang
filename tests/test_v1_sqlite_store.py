@@ -47,7 +47,9 @@ def test_sqlite_store_saves_sources_chunks_and_events(tmp_path):
 
     store.save_source_artifact(artifact)
     store.save_source_chunk(chunk)
-    event = store.append_event("run_1", "source.chunk.created", {"chunk_id": "chunk_1"})
+    event_1 = store.append_event("run_1", "source.artifact.created", {"artifact_id": "artifact_1"})
+    event_2 = store.append_event("run_1", "source.chunk.created", {"chunk": chunk})
+    other_run_event = store.append_event("run_2", "source.chunk.created", {"chunk_id": "chunk_1"})
 
     saved_artifact = store.get_source_artifact("artifact_1")
     assert saved_artifact is not None
@@ -56,5 +58,12 @@ def test_sqlite_store_saves_sources_chunks_and_events(tmp_path):
     assert saved_artifact.uri == "manual://cap_1"
     assert saved_artifact.parse_status == "parsed"
     assert store.list_source_chunks("artifact_1")[0].id == "chunk_1"
-    assert store.replay_events("run_1")[0].id == event.id
-    assert store.replay_events("run_1")[0].payload == {"chunk_id": "chunk_1"}
+
+    run_1_events = store.replay_events("run_1")
+    assert [event.seq for event in run_1_events] == [1, 2]
+    assert store.replay_events("run_1", after_seq=1) == [run_1_events[1]]
+    assert store.replay_events("run_2") == [other_run_event]
+    assert run_1_events[0].id == event_1.id
+    assert run_1_events[1].id == event_2.id
+    assert run_1_events[1].payload["chunk"]["id"] == "chunk_1"
+    assert run_1_events[1].payload["chunk"]["artifact_id"] == "artifact_1"

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from manxiang.schema import CaptureItem, SourceArtifact, SourceChunk, StateEvent
+from manxiang.events import StateEvent
+from manxiang.schema import CaptureItem, SourceArtifact, SourceChunk
 
 
 class CaptureRepository(Protocol):
@@ -15,6 +16,9 @@ class CaptureRepository(Protocol):
 
 class SourceRepository(Protocol):
     def save_source_artifact(self, artifact: SourceArtifact) -> None:
+        raise NotImplementedError
+
+    def get_source_artifact(self, artifact_id: str) -> SourceArtifact | None:
         raise NotImplementedError
 
     def save_source_chunk(self, chunk: SourceChunk) -> None:
