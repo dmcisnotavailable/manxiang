@@ -1,7 +1,7 @@
-tests/test_v1_map_versions.py
-  s_3ba2f26277c9bb::t_b12e5fd3d61848 1-2,8-11,21-30,52-147,158,169-215
 src/manxiang/map_versions.py
   s_3ba2f26277c9bb::t_e1b02c4f02cbb3 23-25,58-59,62-68
+tests/test_v1_map_versions.py
+  s_3ba2f26277c9bb::t_b12e5fd3d61848 1-2,8-11,21-30,52-147,158,169-215
 ---
 {
   "schema_version": "authorship/3.0.0",
