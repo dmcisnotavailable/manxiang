@@ -76,6 +76,26 @@ Core additions:
 - Guardrails and reducers that reject fact nodes without source_refs.
 - Eval runner for rubric-based Agent quality checks.
 
+Workbench Demo / API check:
+
+```bash
+PYTHONPATH=src uv run python -m manxiang.web
+```
+
+Open the workbench page:
+
+```text
+http://127.0.0.1:8765
+```
+
+Check v1 JSON state:
+
+```text
+http://127.0.0.1:8765/v1/state
+```
+
+The current workbench page still reads its main state from `/api/state`. V1 extension fields such as `mapVersions`, `recentEvents`, and `sourceChunks` are visible through `/v1/state`.
+
 Run local deterministic tests:
 
 ```bash
@@ -94,7 +114,7 @@ Run v1 eval sample:
 uv run python evals/manxiang/run_eval.py
 ```
 
-Run real LLM validation only when provider and model are configured:
+Run real LLM validation only when provider, model, and the matching provider credential are configured. Common credential variables include `OPENAI_API_KEY`, `GEMINI_API_KEY`, or `ANTHROPIC_API_KEY`. The current real LLM validation entrypoint is `tests/test_v0b_piagent_real_llm.py`.
 
 ```bash
 MANXIANG_LLM_PROVIDER=your_provider MANXIANG_LLM_MODEL=your_model uv run pytest tests/test_v0b_piagent_real_llm.py
