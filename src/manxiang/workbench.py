@@ -55,7 +55,15 @@ class WorkbenchService:
         run = create_run(self.pipeline.store, [capture.id for capture in captures], clock=self.clock)
         self.surprise_run = _to_jsonable(run)
         if run_bridge:
-            self.surprise_result = run_surprise_with_bridge(self.pipeline.store, run, captures, bridge=bridge)
+            self.surprise_result = run_surprise_with_bridge(
+                self.pipeline.store,
+                run,
+                captures,
+                bridge=bridge,
+                clock=self.clock,
+            )
+            if self.surprise_result.get("run"):
+                self.surprise_run = self.surprise_result["run"]
             self._sync_agent_outputs(run.id)
         return self.state()
 

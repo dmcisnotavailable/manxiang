@@ -2,10 +2,11 @@ import json
 
 import pytest
 
-from manxiang.runs import run_surprise_with_bridge
+from manxiang.runs import confirm_search, run_surprise_with_bridge
 from manxiang.run_state import RunStateMachine
 from manxiang.schema import AgentRun
 from manxiang.storage import JsonStore
+from manxiang.workbench import WorkbenchService
 
 
 def make_run(status: str = "exploring", autonomy_level: str = "inbox_only") -> AgentRun:
@@ -50,6 +51,54 @@ def test_confirm_web_search_sets_search_budget():
     assert updated.autonomy_level == "web_search_allowed"
     assert updated.budget["max_search_queries"] == 2
     assert updated.updated_at == "2026-08-06T10:05:00+08:00"
+
+
+def test_confirm_search_requires_waiting_user(tmp_path):
+    store = JsonStore(tmp_path)
+
+    with pytest.raises(ValueError, match="waiting_user"):
+        confirm_search(
+            store,
+            make_run(status="exploring"),
+            gap_id="gap_1",
+            max_search_queries=2,
+            clock=lambda: "2026-08-06T10:05:00+08:00",
+        )
+
+
+def test_confirm_search_persists_web_search_permission(tmp_path):
+    store = JsonStore(tmp_path)
+
+    updated = confirm_search(
+        store,
+        make_run(status="waiting_user"),
+        gap_id="gap_1",
+        max_search_queries=2,
+        clock=lambda: "2026-08-06T10:05:00+08:00",
+    )
+
+    assert updated.status == "exploring"
+    assert updated.autonomy_level == "web_search_allowed"
+    assert updated.budget["max_search_queries"] == 2
+    assert updated.updated_at == "2026-08-06T10:05:00+08:00"
+
+    stored_run = json.loads((tmp_path / "runs.json").read_text(encoding="utf-8"))[0]
+    assert stored_run["status"] == "exploring"
+    assert stored_run["autonomy_level"] == "web_search_allowed"
+    assert stored_run["budget"]["max_search_queries"] == 2
+
+
+def test_confirm_search_rejects_negative_budget(tmp_path):
+    store = JsonStore(tmp_path)
+
+    with pytest.raises(ValueError, match="non-negative"):
+        confirm_search(
+            store,
+            make_run(status="waiting_user"),
+            gap_id="gap_1",
+            max_search_queries=-1,
+            clock=lambda: "2026-08-06T10:05:00+08:00",
+        )
 
 
 def test_blocked_tool_completed_is_ignored_and_run_waits_for_user(tmp_path):
@@ -138,6 +187,27 @@ def test_blocked_tool_without_reason_uses_generic_prompt(tmp_path, monkeypatch):
     events = store.replay_events("run_1")
     assert events[-1].type == "user.input.required"
     assert events[-1].payload["reason"] == "tool call requires user confirmation"
+
+
+def test_workbench_syncs_blocked_bridge_run_state(tmp_path):
+    times = iter([
+        "2026-08-06T09:55:00+08:00",
+        "2026-08-06T10:00:00+08:00",
+        "2026-08-06T10:05:00+08:00",
+    ])
+    service = WorkbenchService(storage_root=tmp_path, clock=lambda: next(times))
+    service.capture(type="text", source="manual", raw_text="A note that can start a surprise run.")
+
+    class BlockedBridge:
+        def run(self, _run, _captures):
+            return {"events": [{"type": "tool.started", "tool_name": "write_style_memory", "payload": {}}]}
+
+    state = service.create_surprise_run(run_bridge=True, bridge=BlockedBridge())
+
+    assert state["surpriseRun"]["status"] == "waiting_user"
+    assert state["surpriseRun"]["blocked_tool_count"] == 1
+    assert state["surpriseRun"]["updated_at"] == "2026-08-06T10:05:00+08:00"
+    assert state["surpriseResult"]["run"]["status"] == "waiting_user"
 
 
 def _valid_agent_map() -> dict:

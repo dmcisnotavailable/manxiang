@@ -1,4 +1,5 @@
-from dataclasses import replace
+from dataclasses import asdict
+from datetime import datetime
 from hashlib import sha1
 
 from manxiang.guardrails import before_tool_call
@@ -25,13 +26,8 @@ def create_run(store: JsonStore, capture_ids: list[str], clock) -> AgentRun:
 
 
 def confirm_search(store: JsonStore, run: AgentRun, gap_id: str, max_search_queries: int, clock) -> AgentRun:
-    updated = replace(
-        run,
-        autonomy_level="web_search_allowed",
-        status="exploring",
-        budget={**run.budget, "max_search_queries": max_search_queries},
-        updated_at=clock(),
-    )
+    machine = RunStateMachine(clock=clock)
+    updated = machine.confirm_web_search(run, max_search_queries=max_search_queries)
     store._upsert("runs.json", updated.id, updated)
     store.append_event(updated.id, "user.input.required", {"resolved": True, "gap_id": gap_id})
     return updated
@@ -45,7 +41,7 @@ def run_surprise_with_bridge(
     clock=None,
 ) -> dict:
     bridge = bridge or PiAgentBridge()
-    machine = RunStateMachine(clock=clock or (lambda: run.updated_at))
+    machine = RunStateMachine(clock=clock or _system_clock)
     blocked_tool_counts: dict[str, int] = {}
     result = bridge.run(run, captures)
     for event in result.get("events", []):
@@ -68,4 +64,9 @@ def run_surprise_with_bridge(
             store.append_event(run.id, "tool.completed", event)
             if event.get("payload") and tool_name:
                 reduce_tool_result(store, run.id, tool_name, event["payload"])
+    result["run"] = asdict(run)
     return result
+
+
+def _system_clock() -> str:
+    return datetime.now().astimezone().isoformat(timespec="seconds")
