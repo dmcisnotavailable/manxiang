@@ -36,3 +36,23 @@ def test_blocks_fact_upgrade_without_source_refs():
     )
 
     assert decision == {"block": True, "reason": "fact nodes require source_refs"}
+
+
+def test_blocks_fact_upgrade_inside_map_without_source_refs():
+    decision = before_tool_call(
+        run("source_parse_allowed"),
+        "revise_knowledge_map",
+        {"map": {"nodes": [{"id": "node_1", "confidence": "fact", "source_refs": []}]}},
+    )
+
+    assert decision == {"block": True, "reason": "fact nodes require source_refs"}
+
+
+def test_allows_fact_upgrade_inside_map_with_source_refs():
+    decision = before_tool_call(
+        run("source_parse_allowed"),
+        "revise_knowledge_map",
+        {"map": {"nodes": [{"id": "node_1", "confidence": "fact", "source_refs": ["src_1"]}]}},
+    )
+
+    assert decision is None

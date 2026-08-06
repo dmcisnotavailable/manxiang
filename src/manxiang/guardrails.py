@@ -1,6 +1,18 @@
 from manxiang.schema import AgentRun
 
 
+def _map_nodes(args: dict) -> list[dict]:
+    nodes = args.get("nodes")
+    if nodes is not None:
+        return nodes
+
+    knowledge_map = args.get("map")
+    if isinstance(knowledge_map, dict):
+        return knowledge_map.get("nodes", [])
+
+    return []
+
+
 def before_tool_call(run: AgentRun, tool_name: str, args: dict) -> dict | None:
     if tool_name == "search_evidence":
         if run.autonomy_level == "inbox_only":
@@ -29,7 +41,7 @@ def before_tool_call(run: AgentRun, tool_name: str, args: dict) -> dict | None:
             return {"block": True, "reason": "retrieve_evidence_chunks requires query"}
 
     if tool_name in {"revise_knowledge_map", "create_knowledge_map"}:
-        for node in args.get("nodes", []):
+        for node in _map_nodes(args):
             if node.get("confidence") == "fact" and not node.get("source_refs"):
                 return {"block": True, "reason": "fact nodes require source_refs"}
 
