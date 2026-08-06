@@ -83,18 +83,35 @@ def reduce_tool_result(store: JsonStore, run_id: str, tool_name: str, payload: d
         return
 
     if tool_name == "revise_knowledge_map":
-        _validate_source_backed_facts(payload["map"])
-        store.append_event(run_id, "map.updated", payload["map"])
+        map_payload = _revision_map_payload(payload)
+        _validate_source_backed_facts(map_payload)
+        store.append_event(run_id, "map.updated", map_payload)
         return
 
     raise ValueError(f"Unknown reducer tool: {tool_name}")
 
 
+def _revision_map_payload(payload: dict) -> dict:
+    if isinstance(payload, dict) and "map" in payload:
+        return payload["map"]
+    return payload
+
+
 def _validate_source_backed_facts(map_payload: dict) -> None:
+    if not isinstance(map_payload, dict):
+        raise ValueError("map payload must be an object")
+
     nodes = map_payload.get("nodes", [])
+    if not isinstance(nodes, list):
+        raise ValueError("map nodes must be a list")
+
     for node in nodes:
-        if node.get("confidence") == "fact" and not node.get("source_refs"):
-            raise ValueError("fact nodes require source_refs")
+        if not isinstance(node, dict):
+            raise ValueError("map nodes must be objects")
+        if node.get("confidence") == "fact":
+            source_refs = node.get("source_refs")
+            if not isinstance(source_refs, list) or not source_refs:
+                raise ValueError("fact nodes require source_refs")
 
 
 def _validate_agent_map(map_payload: dict) -> None:
