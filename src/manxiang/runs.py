@@ -50,6 +50,7 @@ def run_surprise_with_bridge(
             decision = before_tool_call(run, tool_name, event.get("payload", {}))
             if decision:
                 store.append_event(run.id, "tool.blocked", {"tool_name": tool_name, **decision})
+                store.append_event(run.id, "user.input.required", {"tool_name": tool_name, "reason": decision["reason"]})
                 continue
             store.append_event(run.id, "tool.started", event)
         elif event["type"] == "tool.completed":
