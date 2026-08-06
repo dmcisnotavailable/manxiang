@@ -72,6 +72,7 @@ def reduce_tool_result(store: JsonStore, run_id: str, tool_name: str, payload: d
         return
 
     if tool_name == "attach_evidence":
+        _validate_source_backed_facts(payload["map"])
         store.append_event(run_id, "evidence.attached", payload["evidence"])
         store.append_event(run_id, "map.updated", payload["map"])
         return
@@ -81,7 +82,19 @@ def reduce_tool_result(store: JsonStore, run_id: str, tool_name: str, payload: d
             store.append_event(run_id, "expression.draft.created", draft)
         return
 
+    if tool_name == "revise_knowledge_map":
+        _validate_source_backed_facts(payload["map"])
+        store.append_event(run_id, "map.updated", payload["map"])
+        return
+
     raise ValueError(f"Unknown reducer tool: {tool_name}")
+
+
+def _validate_source_backed_facts(map_payload: dict) -> None:
+    nodes = map_payload.get("nodes", [])
+    for node in nodes:
+        if node.get("confidence") == "fact" and not node.get("source_refs"):
+            raise ValueError("fact nodes require source_refs")
 
 
 def _validate_agent_map(map_payload: dict) -> None:
