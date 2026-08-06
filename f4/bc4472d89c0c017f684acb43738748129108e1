@@ -1,0 +1,25 @@
+src/manxiang/repositories.py
+  s_3ba2f26277c9bb::t_e4225c433b11b2 1-32
+src/manxiang/sqlite_store.py
+  s_3ba2f26277c9bb::t_5b1aa552f0fd64 1-124
+tests/test_v1_sqlite_store.py
+  s_3ba2f26277c9bb::t_83ef653d24bd48 1-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "f4bc4472d89c0c017f684acb43738748129108e1",
+  "prompts": {},
+  "sessions": {
+    "s_3ba2f26277c9bb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd5b9-cf53-7252-97ac-ab42f58e34fe",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 171,
+      "accepted_lines": 171
+    }
+  }
+}
