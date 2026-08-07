@@ -1,0 +1,47 @@
+src/manxiang/reducers.py
+  s_fb650f9277b25a::t_6170c1eaac1fcf 80,109,169
+  s_fb650f9277b25a::t_d924b0a5316870 81,112
+  s_fb650f9277b25a::t_1b39dbbe794915 2
+tests/test_v1_workbench_full.py
+  s_fb650f9277b25a::t_754b716cc8f50b 75-123
+  s_fb650f9277b25a::t_e8b53aa5544b16 124-195
+src/manxiang/research_service.py
+  s_fb650f9277b25a::t_3ae5c60a5cb87b 203,206,211-219
+  s_fb650f9277b25a::t_2dee6e9ff148ac 8,11-12,49-50,68-69,76,81,106,117,133,143,156,171-183,190-202,204-205,207-210
+tests/test_v1_full_reducers.py
+  s_fb650f9277b25a::t_3a1e2c2089f25e 4,323-424
+src/manxiang/web.py
+  s_fb650f9277b25a::t_72d75de6d4e82a 93,120-149
+tests/test_v1_research_service.py
+  s_fb650f9277b25a::t_ae68c31876b1e0 5-14,138,162-168,186-248,288-308,333-362
+  s_fb650f9277b25a::t_92d6b77b720cfa 309-332
+src/manxiang/workbench.py
+  s_fb650f9277b25a::t_649f2fd995cdc8 113-173,316-320,336-340
+  s_fb650f9277b25a::t_069042b44601ac 13-23,107-112
+  s_fb650f9277b25a::t_c3f5cfc9464445 565-583
+  s_fb650f9277b25a::t_db0a2a1aec22ca 309-315
+  s_fb650f9277b25a::t_aaba895bdde7d4 341
+src/manxiang/source_refs.py
+  s_fb650f9277b25a::t_653d9295927e25 1-87
+tests/test_v1_api_routes.py
+  s_fb650f9277b25a::t_10f1e20d5887ee 6,119-224
+  s_fb650f9277b25a::t_aaba895bdde7d4 225-226
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "51de472f3c10241f3daa9f1f0a93913e284024b7",
+  "prompts": {},
+  "sessions": {
+    "s_fb650f9277b25a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9e2-9420-7792-bff0-4e37aca70e3a",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 3,
+      "accepted_lines": 3
+    }
+  }
+}
