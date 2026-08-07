@@ -1,0 +1,23 @@
+tests/test_v1_event_log.py
+  s_fb650f9277b25a::t_3b92aaac898dd6 1-51
+src/manxiang/event_log.py
+  s_fb650f9277b25a::t_03a34e48fba1af 1-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "3169d1f78a8238a6eb5522628ad65c50f8217be3",
+  "prompts": {},
+  "sessions": {
+    "s_fb650f9277b25a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9e2-9420-7792-bff0-4e37aca70e3a",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 91,
+      "accepted_lines": 91
+    }
+  }
+}
