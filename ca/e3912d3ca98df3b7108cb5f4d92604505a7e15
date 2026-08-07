@@ -1,0 +1,24 @@
+src/manxiang/run_state.py
+  s_fb650f9277b25a::t_0f52217820cb10 44,52,99-110
+tests/test_v1_full_run_state.py
+  s_fb650f9277b25a::t_93cf455e0ec67d 62-69,79-95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "cae3912d3ca98df3b7108cb5f4d92604505a7e15",
+  "prompts": {},
+  "sessions": {
+    "s_fb650f9277b25a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9e2-9420-7792-bff0-4e37aca70e3a",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 26,
+      "total_deletions": 6,
+      "accepted_lines": 26
+    }
+  }
+}
