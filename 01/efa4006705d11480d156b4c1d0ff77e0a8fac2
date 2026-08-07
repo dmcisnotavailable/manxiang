@@ -1,0 +1,40 @@
+tests/conftest.py
+  s_fb650f9277b25a::t_cc1e3b3a16e825 8-9
+evals/manxiang/cases/oversearch_guardrail.json
+  s_fb650f9277b25a::t_f0a083e6d3c07b 1-7
+evals/manxiang/cases/ai_companion_memory.json
+  s_fb650f9277b25a::t_f0a083e6d3c07b 1-7
+evals/manxiang/__init__.py
+  s_fb650f9277b25a::t_81380e215a46f1 1
+evals/manxiang/run_eval.py
+  s_fb650f9277b25a::t_ef47fd41f9892b 16,54-57,60-71,73-74,76-105,107-108,111-121
+evals/__init__.py
+  s_fb650f9277b25a::t_81380e215a46f1 1
+tests/test_v1_real_llm_eval.py
+  s_fb650f9277b25a::t_fc78711d398a73 1-12
+src/manxiang/evals.py
+  s_fb650f9277b25a::t_ecc4cc234fc42b 32-34,42
+tests/test_v1_eval_suite.py
+  s_fb650f9277b25a::t_cacb0f42218b52 1-21
+evals/manxiang/rubrics/research_map.json
+  s_fb650f9277b25a::t_58900e013e3551 7,16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "01efa4006705d11480d156b4c1d0ff77e0a8fac2",
+  "prompts": {},
+  "sessions": {
+    "s_fb650f9277b25a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9e2-9420-7792-bff0-4e37aca70e3a",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 101,
+      "total_deletions": 23,
+      "accepted_lines": 101
+    }
+  }
+}
