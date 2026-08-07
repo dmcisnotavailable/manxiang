@@ -1,0 +1,27 @@
+tests/test_v1_workbench_full.py
+  s_fb650f9277b25a::t_a4a4e4b716af2e 1-25
+src/manxiang/workbench.py
+  s_fb650f9277b25a::t_05a4e057e72291 216-217,225-246
+prototype/workbench.html
+  s_fb650f9277b25a::t_0f215e305658e3 475-479
+  s_fb650f9277b25a::t_85b7b1cf70d1c5 191-195,404-407,450-453,464,472-474,643-658,667-696,769
+  s_fb650f9277b25a::t_0664b75ecf61c7 480-481
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "9fcdc350ee2fa24c03faf27901a2077ed80cf4e2",
+  "prompts": {},
+  "sessions": {
+    "s_fb650f9277b25a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9e2-9420-7792-bff0-4e37aca70e3a",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 2,
+      "accepted_lines": 2
+    }
+  }
+}
