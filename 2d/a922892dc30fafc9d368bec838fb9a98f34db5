@@ -1,0 +1,25 @@
+src/manxiang/reducers.py
+  s_fb650f9277b25a::t_0b78d7518c1ad5 203-206
+  s_fb650f9277b25a::t_4e5d6b0819ffb2 202
+tests/test_v1_full_reducers.py
+  s_fb650f9277b25a::t_3490f769a174c6 238-244
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "2da922892dc30fafc9d368bec838fb9a98f34db5",
+  "prompts": {},
+  "sessions": {
+    "s_fb650f9277b25a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9e2-9420-7792-bff0-4e37aca70e3a",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 13,
+      "total_deletions": 1,
+      "accepted_lines": 12
+    }
+  }
+}
