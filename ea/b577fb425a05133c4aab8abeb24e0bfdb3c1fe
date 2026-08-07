@@ -1,0 +1,23 @@
+src/manxiang/evidence_retrieval.py
+  s_fb650f9277b25a::t_ea11175491cf86 1-62
+tests/test_v1_evidence_retrieval.py
+  s_fb650f9277b25a::t_a50b1c5eb053d7 1-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "eab577fb425a05133c4aab8abeb24e0bfdb3c1fe",
+  "prompts": {},
+  "sessions": {
+    "s_fb650f9277b25a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9e2-9420-7792-bff0-4e37aca70e3a",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 108,
+      "accepted_lines": 108
+    }
+  }
+}
