@@ -1,0 +1,24 @@
+tests/test_v1_full_sqlite_store.py
+  s_fb650f9277b25a::t_2a2224dcd5fc26 1-119
+src/manxiang/sqlite_store.py
+  s_fb650f9277b25a::t_7d163f9873d86d 11-25,41-85,100-121,210-212,221-241
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "3e60db9e21c5c5e31091a761c160c5f4c190c58e",
+  "prompts": {},
+  "sessions": {
+    "s_fb650f9277b25a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9e2-9420-7792-bff0-4e37aca70e3a",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 196,
+      "total_deletions": 1,
+      "accepted_lines": 196
+    }
+  }
+}
