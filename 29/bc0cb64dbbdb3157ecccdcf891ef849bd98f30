@@ -1,0 +1,28 @@
+tests/test_v1_vector_index.py
+  s_fb650f9277b25a::t_88fa1393b07027 46-69
+src/manxiang/vector_index.py
+  s_fb650f9277b25a::t_3745762b327759 11,54,57-59,61,63-64,67-69,95
+src/manxiang/retrieval.py
+  s_fb650f9277b25a::t_3745762b327759 62,64
+tests/test_v1_retrieval.py
+  s_fb650f9277b25a::t_88fa1393b07027 1,3,126-144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "29bc0cb64dbbdb3157ecccdcf891ef849bd98f30",
+  "prompts": {},
+  "sessions": {
+    "s_fb650f9277b25a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9e2-9420-7792-bff0-4e37aca70e3a",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 45,
+      "total_deletions": 8,
+      "accepted_lines": 45
+    }
+  }
+}
