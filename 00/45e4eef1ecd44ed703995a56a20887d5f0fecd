@@ -1,0 +1,26 @@
+tests/test_v1_workbench.py
+  s_fb650f9277b25a::t_7dff48a888b556 16-25
+src/manxiang/workbench.py
+  s_fb650f9277b25a::t_5a8efed38e1975 63,207,218-222
+tests/test_v1_api_routes.py
+  s_fb650f9277b25a::t_3ea5ccc898b270 37,41-46,66,90,117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "0045e4eef1ecd44ed703995a56a20887d5f0fecd",
+  "prompts": {},
+  "sessions": {
+    "s_fb650f9277b25a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9e2-9420-7792-bff0-4e37aca70e3a",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 20,
+      "total_deletions": 7,
+      "accepted_lines": 20
+    }
+  }
+}
