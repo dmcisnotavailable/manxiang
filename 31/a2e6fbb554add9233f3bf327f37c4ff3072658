@@ -1,0 +1,30 @@
+tests/test_v1_api_routes.py
+  s_fb650f9277b25a::t_b253a0048256e1 98-102,107
+  s_fb650f9277b25a::t_876913e1f16aca 1-11,18-46,53-90,97,103-106,108-110
+  s_fb650f9277b25a::t_31c1f806ef8468 12-17,47-52,91-96
+src/manxiang/web.py
+  s_fb650f9277b25a::t_2655efc50013e5 47-71,79-89,107,113,171-174
+  s_fb650f9277b25a::t_8dcaf3e09e1a2b 72-78,114-116
+src/manxiang/workbench.py
+  s_fb650f9277b25a::t_cdeb2eeacfdfd2 8,11,15-16,44-50,57-98,164-165,209,211-212,214-215,234-236,241-246
+  s_fb650f9277b25a::t_ee01fedab547c1 51-56,237-240
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "31a2e6fbb554add9233f3bf327f37c4ff3072658",
+  "prompts": {},
+  "sessions": {
+    "s_fb650f9277b25a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9e2-9420-7792-bff0-4e37aca70e3a",
+        "model": "GPT-5.5"
+      },
+      "human_author": "dmcisnotavailable <1503279384@qq.com>",
+      "total_additions": 219,
+      "total_deletions": 27,
+      "accepted_lines": 212
+    }
+  }
+}
