@@ -343,7 +343,7 @@
           <div class="small" id="subtitle">从收藏到草稿的一条线</div>
         </div>
         <div class="actions">
-          <button id="seedDemo" type="button">载入示例</button>
+          <button id="seedDemo" type="button">加载王室真实测试用例</button>
           <button id="resetState" type="button">重置</button>
         </div>
       </div>
@@ -354,7 +354,7 @@
 
     <section class="composer" aria-label="输入材料">
       <div class="composer-inner">
-        <textarea id="composerText">为什么 AI 陪伴让人觉得真实和被理解？</textarea>
+        <textarea id="composerText">伊莎贝拉女王和哥伦布相关，感觉能串起来了</textarea>
         <div class="composer-tools">
           <div class="types" id="types"></div>
           <button class="send" id="sendCapture" type="button">收进来</button>
@@ -433,6 +433,7 @@
       state.task = data.task || null;
       state.linePlan = data.linePlan || null;
       state.map = data.map || null;
+      state.agentMap = data.agentMap || null;
       state.draftType = data.draftType || "outline";
       state.draft = data.draft || "";
       state.parking = data.parking || [];
@@ -457,7 +458,7 @@
     function isDone(id) {
       if (id === "capture") return state.captures.length > 0;
       if (id === "topics") return state.topics.length > 0;
-      if (id === "scope") return Boolean(state.task);
+      if (id === "scope") return Boolean(state.task || state.map);
       if (id === "map") return Boolean(state.map);
       if (id === "draft") return Boolean(state.draft);
       return false;
@@ -479,14 +480,14 @@
       await api("/api/seed", {});
       state.step = "capture";
       render();
-      toast("已载入示例");
+      toast("已加载王室真实测试用例");
     }
 
     async function resetState() {
       await api("/api/reset", {});
       state.step = "capture";
       state.captureType = "text";
-      $("#composerText").value = "为什么 AI 陪伴让人觉得真实和被理解？";
+      $("#composerText").value = "伊莎贝拉女王和哥伦布相关，感觉能串起来了";
       render();
       toast("已重置");
     }
@@ -551,7 +552,7 @@
           <div class="meta">收藏 ${topic.capture_ids.length} 条。${esc(topic.suggested_action)}。</div>
           <div class="small">反复问题：${esc(topic.repeated_questions[0] || "还没有稳定问题")}</div>
           <div class="command-row">
-            <button data-start-topic="${esc(topic.id)}" type="button">开始研究</button>
+            <button data-start-topic="${esc(topic.id)}" type="button">让 Agent 分析</button>
           </div>
         </div>
       `).join("") : '<p class="muted">还没有主题。先收进 3-5 条材料。</p>';
@@ -591,16 +592,15 @@
     }
 
     function renderMap() {
-      if (!state.map) return '<h1>先完成开题</h1><p class="muted">确定主线后才能生成地图。</p>';
+      if (!state.map) return '<h1>先让 Agent 分析</h1><p class="muted">真实 LLM 会基于全部收藏生成知识地图。</p>';
 
-      const tree = state.task.title + `
+      const tree = state.map.title + `
 ├─ 核心问题
 ├─ 推荐主线
 │  ${state.map.mainline.map((item, index) => (index === state.map.mainline.length - 1 ? "└" : "├") + "─ " + item).join("\n│  ")}
-├─ 关键概念
+├─ 非显而易见洞察
 │  ${state.map.concepts.map((item, index) => (index === state.map.concepts.length - 1 ? "└" : "├") + "─ " + item).join("\n│  ")}
-├─ 证据材料
-├─ 证据缺口
+├─ 可执行证据缺口
 │  ${state.map.gaps.map((item, index) => (index === state.map.gaps.length - 1 ? "└" : "├") + "─ " + item).join("\n│  ")}
 └─ 分支停车场`;
 
@@ -647,8 +647,8 @@
       $("#loadFive")?.addEventListener("click", seedDemo);
       document.querySelectorAll("[data-start-topic]").forEach((button) => {
         button.addEventListener("click", async () => {
-          await api("/api/knowledge-map", { topic_id: button.dataset.startTopic, mode: "gentle_editor" });
-          go("scope");
+          await api("/v1/surprise-runs", { run_bridge: true });
+          go("map");
         });
       });
       $("#makeMap")?.addEventListener("click", () => {

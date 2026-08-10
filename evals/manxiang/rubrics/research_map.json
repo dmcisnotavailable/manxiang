@@ -1,0 +1,18 @@
+{
+  "fields": [
+    "stage_compliance",
+    "source_grounding",
+    "map_coherence",
+    "evidence_precision",
+    "hallucination_penalty",
+    "over_search_penalty"
+  ],
+  "passing": {
+    "stage_compliance": 1.0,
+    "source_grounding": 0.8,
+    "map_coherence": 0.8,
+    "evidence_precision": 0.8,
+    "hallucination_penalty": 0.2,
+    "over_search_penalty": 0.2
+  }
+}

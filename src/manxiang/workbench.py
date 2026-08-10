@@ -5,17 +5,11 @@ from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any
 
+from manxiang.fixtures import v0b_capture_fixtures
 from manxiang.pipeline import ManxiangPipeline
-from manxiang.schema import AgentMode, CaptureType, KnowledgeMap, LinePlan, ResearchTask
-
-
-DEMO_NOTES = [
-    "为什么 AI 陪伴让人觉得真实和被理解？",
-    "明知道是 AI，为什么还是有人会依赖？",
-    "AI 陪伴的即时回应是不是降低了表达压力？",
-    "AI 陪伴的长期记忆会不会增强被理解的感觉？",
-    "AI 陪伴这类产品为什么能让人产生亲密感？",
-]
+from manxiang.runs import confirm_search, create_run, run_surprise_with_bridge
+from manxiang.schema import AgentMode, AgentRun, CaptureType, KnowledgeMap, LinePlan, ResearchTask
+from manxiang.source_parser import SourceParser
 
 
 class WorkbenchService:
@@ -39,20 +33,47 @@ class WorkbenchService:
         user_note: str = "",
         raw_text: str = "",
     ) -> dict[str, Any]:
-        if not user_note.strip():
-            raise ValueError("user_note is required")
         self.pipeline.capture(type=type, source=source or "工作台输入", user_note=user_note, raw_text=raw_text)
         self._clear_downstream()
         return self.state()
 
     def seed_demo(self) -> dict[str, Any]:
         self.reset()
-        for index, note in enumerate(DEMO_NOTES):
-            self.pipeline.capture(type="text", source=f"demo note {index + 1}", user_note=note)
+        for fixture in v0b_capture_fixtures():
+            self.pipeline.capture(
+                type=_capture_type_for_fixture(fixture),
+                source=fixture.get("source_uri", "manual"),
+                user_note=fixture.get("user_note", ""),
+                raw_text=fixture.get("original_text", ""),
+            )
         self.discover_topics()
-        topic_id = self.selected_topic_id or self.topics[0]["id"]
-        self.create_knowledge_map(topic_id=topic_id, mode="gentle_editor")
-        self.create_draft("outline")
+        return self.state()
+
+    def create_surprise_run(self, run_bridge: bool = False, bridge=None) -> dict[str, Any]:
+        captures = self.pipeline.store.list_captures()
+        if not captures:
+            raise ValueError("captures are required before surprise run")
+        run = create_run(self.pipeline.store, [capture.id for capture in captures], clock=self.clock)
+        self.surprise_run = _to_jsonable(run)
+        if run_bridge:
+            self.surprise_result = run_surprise_with_bridge(
+                self.pipeline.store,
+                run,
+                captures,
+                bridge=bridge,
+                clock=self.clock,
+            )
+            if self.surprise_result.get("run"):
+                self.surprise_run = self.surprise_result["run"]
+            self._sync_agent_outputs(run.id)
+        return self.state()
+
+    def confirm_run_search(self, run_id: str, gap_id: str, max_search_queries: int = 3) -> dict[str, Any]:
+        if not self.surprise_run or self.surprise_run.get("id") != run_id:
+            raise ValueError(f"Unknown run id: {run_id}")
+        run = AgentRun(**self.surprise_run)
+        run = confirm_search(self.pipeline.store, run, gap_id, max_search_queries, clock=self.clock)
+        self.surprise_run = _to_jsonable(run)
         return self.state()
 
     def discover_topics(self) -> dict[str, Any]:
@@ -110,10 +131,39 @@ class WorkbenchService:
             "task": self.task,
             "linePlan": self.line_plan,
             "map": self.knowledge_map,
+            "agentMap": self.agent_map,
             "draftType": self.draft_type,
             "draft": self.draft,
             "parking": self.parking,
             "notice": self.notice,
+            "surpriseRun": self.surprise_run,
+            "surpriseResult": self.surprise_result,
+        }
+
+    def v1_state(self) -> dict[str, Any]:
+        events = []
+        if self.surprise_run:
+            events = [
+                _to_jsonable(event)
+                for event in self.pipeline.store.replay_events(self.surprise_run["id"])
+            ]
+        return {
+            **self.state(),
+            "mapVersions": [_to_jsonable(item) for item in self.pipeline.store.list_maps()],
+            "recentEvents": events[-20:],
+            "sourceChunks": self.v1_source_chunks,
+        }
+
+    def parse_capture_for_v1(self, capture_id: str) -> dict[str, Any]:
+        captures = {capture.id: capture for capture in self.pipeline.store.list_captures()}
+        if capture_id not in captures:
+            raise ValueError(f"Unknown capture id: {capture_id}")
+        parser = SourceParser(clock=self.clock)
+        artifact, chunks = parser.parse_capture(captures[capture_id])
+        self.v1_source_chunks = [_to_jsonable(chunk) for chunk in chunks]
+        return {
+            "artifact": _to_jsonable(artifact),
+            "chunks": [_to_jsonable(chunk) for chunk in chunks],
         }
 
     def _reset_runtime(self) -> None:
@@ -123,22 +173,37 @@ class WorkbenchService:
         self.task: dict[str, Any] | None = None
         self.line_plan: dict[str, Any] | None = None
         self.knowledge_map: dict[str, Any] | None = None
+        self.agent_map: dict[str, Any] | None = None
         self.draft_type = "outline"
         self.draft = ""
         self.parking = ["底层模型架构", "语音克隆技术史"]
         self.notice = ""
+        self.surprise_run: dict[str, Any] | None = None
+        self.surprise_result: dict[str, Any] | None = None
+        self.v1_source_chunks: list[dict[str, Any]] = []
 
     def _clear_downstream(self) -> None:
         self.topics = []
         self.selected_topic_id = ""
+        self.v1_source_chunks = []
         self._clear_task_outputs()
 
     def _clear_task_outputs(self) -> None:
         self.task = None
         self.line_plan = None
         self.knowledge_map = None
+        self.agent_map = None
         self.draft = ""
         self.draft_type = "outline"
+        self.surprise_run = None
+        self.surprise_result = None
+
+    def _sync_agent_outputs(self, run_id: str) -> None:
+        maps = [event.payload for event in self.pipeline.store.replay_events(run_id) if event.type == "map.created"]
+        if not maps:
+            return
+        self.agent_map = maps[-1]
+        self.knowledge_map = _agent_map_view(self.agent_map)
 
 
 def _to_jsonable(value: Any) -> Any:
@@ -149,6 +214,14 @@ def _to_jsonable(value: Any) -> Any:
     if isinstance(value, dict):
         return {key: _to_jsonable(item) for key, item in value.items()}
     return value
+
+
+def _capture_type_for_fixture(fixture: dict[str, str]) -> CaptureType:
+    if fixture["source_type"] == "url":
+        return "url"
+    if fixture["source_type"] == "mixed":
+        return "screenshot_note"
+    return "text"
 
 
 def _task_view(task: ResearchTask) -> dict[str, Any]:
@@ -194,6 +267,89 @@ def _map_view(knowledge_map: KnowledgeMap) -> dict[str, Any]:
         "nextAction": knowledge_map.text_view.next_action,
         "recommendationReason": knowledge_map.text_view.recommendation_reason,
         "tree": _tree_view(root),
+    }
+
+
+def _agent_map_view(agent_map: dict[str, Any]) -> dict[str, Any]:
+    insights = agent_map.get("non_obvious_insights", [])
+    gaps = agent_map.get("evidence_gaps", [])
+    mainline = agent_map.get("mainline", [])
+    known_unknowns = agent_map.get("known_unknowns", [])
+    title = agent_map.get("title", "Agent 分析知识图")
+    core_question = agent_map.get("core_question", "")
+    thesis = agent_map.get("thesis", "")
+    return {
+        "taskId": agent_map.get("id", "agent_map"),
+        "version": agent_map.get("version", 1),
+        "title": title,
+        "coreQuestion": core_question,
+        "mainline": mainline,
+        "concepts": [item.get("claim", "") for item in insights],
+        "evidence": [item.get("why_interesting", "") for item in insights],
+        "gaps": [gap.get("description", "") for gap in gaps],
+        "nextAction": gaps[0].get("search_query", "选择一个证据缺口开始验证") if gaps else "确认 Agent 分析方向",
+        "recommendationReason": thesis,
+        "tree": {
+            "id": agent_map.get("id", "agent_map"),
+            "label": title,
+            "kind": "root",
+            "children": [
+                {"id": "core_question", "label": core_question, "kind": "core_question", "children": []},
+                {
+                    "id": "mainline",
+                    "label": "Agent 推荐主线",
+                    "kind": "mainline",
+                    "children": [
+                        {"id": f"mainline_{index + 1}", "label": item, "kind": "mainline", "children": []}
+                        for index, item in enumerate(mainline)
+                    ],
+                },
+                {
+                    "id": "insights",
+                    "label": "非显而易见洞察",
+                    "kind": "concept",
+                    "children": [
+                        {
+                            "id": f"insight_{index + 1}",
+                            "label": item.get("claim", ""),
+                            "kind": "concept",
+                            "children": [
+                                {
+                                    "id": f"insight_{index + 1}_why",
+                                    "label": item.get("why_interesting", ""),
+                                    "kind": "evidence",
+                                    "children": [],
+                                }
+                            ],
+                        }
+                        for index, item in enumerate(insights)
+                    ],
+                },
+                {
+                    "id": "known_unknowns",
+                    "label": "待澄清问题",
+                    "kind": "evidence_gap",
+                    "children": [
+                        {"id": f"unknown_{index + 1}", "label": item, "kind": "evidence_gap", "children": []}
+                        for index, item in enumerate(known_unknowns)
+                    ],
+                },
+                {
+                    "id": "evidence_gaps",
+                    "label": "可执行证据缺口",
+                    "kind": "evidence_gap",
+                    "children": [
+                        {
+                            "id": gap.get("id", f"gap_{index + 1}"),
+                            "label": f"{gap.get('description', '')}｜检索：{gap.get('search_query', '')}",
+                            "kind": "evidence_gap",
+                            "children": [],
+                        }
+                        for index, gap in enumerate(gaps)
+                    ],
+                },
+            ],
+        },
     }
 
 

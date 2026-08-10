@@ -6,7 +6,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from manxiang.workbench import WorkbenchService
 
@@ -42,12 +42,21 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self) -> None:
-        path = urlparse(self.path).path
+        parsed = urlparse(self.path)
+        path = parsed.path
         if path in {"/", "/workbench", "/prototype/workbench.html"}:
             self._serve_file(PROTOTYPE_ROOT / "workbench.html", "text/html; charset=utf-8")
             return
         if path == "/api/state":
             self._send_json(self.workbench.state())
+            return
+        if path == "/v1/state":
+            self._send_json(self.workbench.v1_state())
+            return
+        if path.startswith("/v1/runs/") and path.endswith("/events"):
+            run_id = path.removeprefix("/v1/runs/").removesuffix("/events").strip("/")
+            after_seq = int(parse_qs(parsed.query).get("after_seq", ["0"])[0])
+            self._send_sse_events(run_id=run_id, after_seq=after_seq)
             return
         self.send_error(HTTPStatus.NOT_FOUND, "Not found")
 
@@ -66,6 +75,24 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     user_note=payload.get("user_note", ""),
                     raw_text=payload.get("raw_text", ""),
                 )
+            elif path == "/v1/captures":
+                result = self.workbench.capture(
+                    type=payload.get("type", "text"),
+                    source=payload.get("source", payload.get("source_uri", "工作台输入")),
+                    user_note=payload.get("user_note", ""),
+                    raw_text=payload.get("raw_text", payload.get("original_text", "")),
+                )
+            elif path == "/v1/surprise-runs":
+                result = self.workbench.create_surprise_run(run_bridge=bool(payload.get("run_bridge", False)))
+            elif path.startswith("/v1/runs/") and path.endswith("/confirmations"):
+                run_id = path.removeprefix("/v1/runs/").removesuffix("/confirmations").strip("/")
+                result = self.workbench.confirm_run_search(
+                    run_id=run_id,
+                    gap_id=payload.get("gap_id", ""),
+                    max_search_queries=int(payload.get("max_search_queries", 3)),
+                )
+            elif path == "/v1/source-parses":
+                result = self.workbench.parse_capture_for_v1(payload.get("capture_id", ""))
             elif path == "/api/topics":
                 result = self.workbench.discover_topics()
             elif path == "/api/select-topic":
@@ -87,6 +114,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json(result)
         except ValueError as error:
             self._send_json({"error": str(error)}, status=HTTPStatus.BAD_REQUEST)
+        except RuntimeError as error:
+            self._send_json({"error": str(error)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def log_message(self, format: str, *args: Any) -> None:
         return
@@ -102,6 +131,19 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self._send_common_headers("application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _send_sse_events(self, run_id: str, after_seq: int) -> None:
+        events = self.workbench.pipeline.store.replay_events(run_id, after_seq=after_seq)
+        body = "".join(
+            f"id: {event.seq}\nevent: {event.type}\ndata: {json.dumps(_to_jsonable(event), ensure_ascii=False)}\n\n"
+            for event in events
+        ).encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self._send_common_headers("text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -123,6 +165,16 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
+
+def _to_jsonable(value: Any) -> Any:
+    if hasattr(value, "__dataclass_fields__"):
+        return {key: _to_jsonable(getattr(value, key)) for key in value.__dataclass_fields__}
+    if isinstance(value, list):
+        return [_to_jsonable(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _to_jsonable(item) for key, item in value.items()}
+    return value
 
 
 def main() -> None:

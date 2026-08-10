@@ -30,14 +30,16 @@ flowchart LR
     SCHEMA["dataclasses + Literal 状态机<br/>CaptureItem / TopicCluster / ResearchTask<br/>LinePlan / KnowledgeMap / EvidenceGap<br/>EvidenceItem / ParkingLotItem / InterventionDecision"]
   end
 
-  subgraph STORE["当前 MVP 本地存储适配器 manxiang/src/manxiang/storage.py"]
-    JS["JsonStore<br/>本地 JSON MVP 存储<br/>未来替换为 Repository 实现"]
+  subgraph STORE["当前 V0b 本地存储适配器 manxiang/src/manxiang/storage.py"]
+    JS["JsonStore<br/>本地 JSON + JSONL 存储<br/>未来可替换为 Repository 实现"]
     CJSON["captures.json"]
     TJSON["topics.json"]
     TASKJSON["tasks.json"]
     MJSON["maps.json"]
     EVJSON["evidence.json"]
     PJSON["parking.json"]
+    EVTJSONL["events.jsonl"]
+    CKPTJSON["checkpoints.json"]
   end
 
   subgraph KB["未来可接入的长期知识库"]
@@ -50,7 +52,7 @@ flowchart LR
     SP["SearchProvider Protocol"]
     FAKE["FakeSearchProvider<br/>测试与本地 demo"]
     WEB["未来真实联网搜索<br/>只服务明确证据缺口"]
-    LLM["未来 LLM / Agent SDK<br/>摘要、聚类、写作升级、风格学习"]
+    LLM["Pi Agent Core / 真实 LLM<br/>V0b 验收 runtime<br/>摘要、探索、工具调用"]
   end
 
   subgraph OUTPUT["默认产出"]
@@ -72,7 +74,7 @@ flowchart LR
 
   SREPO -.当前实现.-> JS
   KREPO -.当前实现.-> JS
-  EREPO -.未来实现.-> JS
+  EREPO -.当前实现.-> JS
   SREPO -.可替换.-> LOCALKB
   KREPO -.可替换.-> LOCALKB
   EREPO -.可替换.-> LOCALKB
@@ -110,6 +112,8 @@ flowchart LR
   EVI --> PATCH
   EVI --> JS
   JS --> EVJSON
+  JS --> EVTJSONL
+  JS --> CKPTJSON
 
   CAP --> SCHEMA
   TOPIC --> SCHEMA
@@ -119,10 +123,9 @@ flowchart LR
   EVI --> SCHEMA
   JS --> SCHEMA
 
-  LLM -.未来增强.-> CAP
-  LLM -.未来增强.-> TOPIC
-  LLM -.未来增强.-> MAP
-  LLM -.未来写作升级.-> KM
+  LLM --> CAP
+  LLM --> MAP
+  LLM -.工具结果落库.-> EREPO
 
   classDef entry fill:#F7F5EF,stroke:#B9A46A,color:#1F2933;
   classDef pipe fill:#E9F2FF,stroke:#5B8CC0,color:#1F2933;
@@ -139,7 +142,7 @@ flowchart LR
   class SREPO,KREPO,EREPO repo;
   class CAP,TOPIC,NAV,MAP,INT,EVI domain;
   class SCHEMA model;
-  class JS,CJSON,TJSON,TASKJSON,MJSON,EVJSON,PJSON store;
+  class JS,CJSON,TJSON,TASKJSON,MJSON,EVJSON,PJSON,EVTJSONL,CKPTJSON store;
   class LOCALKB,CLOUDKB,THIRD kb;
   class SP,FAKE,WEB,LLM ext;
   class TOPICS,CONTRACT,LINE,KM,PATCH out;
